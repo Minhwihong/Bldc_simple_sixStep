@@ -133,14 +133,6 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-   //Bldc_HallPattern_Set(&g_xBldcCtlCtx, g_xBCMMotorHallLoc);
- Bldc_HallPattern_Set(&g_xBldcCtlCtx, g_xJK42MotorHallLoc);
-
- while(1){
-
-
-   Bldc_CtlMain(&g_xBldcCtlCtx, g_usDuty);
- }
 
   /* USER CODE END SysInit */
 

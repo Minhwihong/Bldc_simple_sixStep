@@ -59,6 +59,8 @@ typedef struct BldcSixStepCtlCtx_tag{
 	BldcPwrOut_t xPwrOutPattern;
 	uint8_t ucHallCombi;
 	uint8_t ucIsHallLocFind;
+	uint8_t ucDir;
+	uint16_t usDuty;
 	// GPIO HALL U
 	// GPIO HALL V
 	// GPIO HALL W
@@ -73,7 +75,8 @@ extern BldcSixStep_CtlCtx_t g_xBldcCtlCtx;
 uint8_t Bldc_HallPattern_Set(BldcSixStep_CtlCtx_t* pxCtx, BldcHallSect_t predefinePatt[]);
 BldcPwrOut_t HallLocationFind_PwrPattern(uint8_t step);
 void ThreePhasePWMGen_1stSucceed(BldcPwrOut_t* pxPwrOut, uint16_t usDuty);
-BldcPwrOut_t Bldc_Ctl_Phase90Ctl(uint8_t ucCurrSection);
+BldcPwrOut_t Bldc_Ctl_PhaseCtl_CW(uint8_t ucCurrSection);
+BldcPwrOut_t Bldc_Ctl_PhaseCtl_CCW(uint8_t ucCurrSection);
 uint8_t Bldc_findHallPattern(BldcSixStep_CtlCtx_t* pxCtx);
 void Bldc_CtlMain(BldcSixStep_CtlCtx_t* pxCtx, uint32_t uiDuty);
 

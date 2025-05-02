@@ -1,9 +1,10 @@
 ../Core/Src/bldcCtl.c:17:9:Bldc_HallPattern_Set	2
 ../Core/Src/bldcCtl.c:29:9:Bldc_findHallPattern	3
-../Core/Src/bldcCtl.c:88:6:Bldc_CtlMain	1
-../Core/Src/bldcCtl.c:112:14:Bldc_Ctl_Phase90Ctl	7
-../Core/Src/bldcCtl.c:172:14:HallLocationFind_PwrPattern	7
-../Core/Src/bldcCtl.c:230:6:ThreePhasePWMGen_1stSucceed	13
-../Core/Src/bldcCtl.c:293:10:GetRotatePerPeriod	1
-../Core/Src/bldcCtl.c:312:7:GetPRM_fromPeriod	2
-../Core/Src/bldcCtl.c:333:6:HAL_GPIO_EXTI_Callback	5
+../Core/Src/bldcCtl.c:88:6:Bldc_CtlMain	2
+../Core/Src/bldcCtl.c:117:14:Bldc_Ctl_PhaseCtl_CW	7
+../Core/Src/bldcCtl.c:174:14:Bldc_Ctl_PhaseCtl_CCW	7
+../Core/Src/bldcCtl.c:233:14:HallLocationFind_PwrPattern	7
+../Core/Src/bldcCtl.c:291:6:ThreePhasePWMGen_1stSucceed	13
+../Core/Src/bldcCtl.c:354:10:GetRotatePerPeriod	1
+../Core/Src/bldcCtl.c:373:7:GetPRM_fromPeriod	2
+../Core/Src/bldcCtl.c:394:6:HAL_GPIO_EXTI_Callback	5

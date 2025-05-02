@@ -100,16 +100,21 @@ void Bldc_CtlMain(BldcSixStep_CtlCtx_t* pxCtx, uint32_t uiDuty){
 
 	ucSection = pxCtx->xHallMatchTb[ucHallCombi].ucSection;
 
+	if(pxCtx->ucDir == 0){
+		pxCtx->xPwrOutPattern = Bldc_Ctl_PhaseCtl_CW(ucSection);
+	}
+	else {
+		pxCtx->xPwrOutPattern = Bldc_Ctl_PhaseCtl_CCW(ucSection);
+	}
+	
 
-	pxCtx->xPwrOutPattern = Bldc_Ctl_Phase90Ctl(ucSection);
-
-	ThreePhasePWMGen_1stSucceed(&pxCtx->xPwrOutPattern, (uint16_t)uiDuty);
+	ThreePhasePWMGen_1stSucceed(&pxCtx->xPwrOutPattern, pxCtx->usDuty);
 }
 
 
 
 
-BldcPwrOut_t Bldc_Ctl_Phase90Ctl(uint8_t ucCurrSection){
+BldcPwrOut_t Bldc_Ctl_PhaseCtl_CW(uint8_t ucCurrSection){
 
 	BldcPwrOut_t pwrOut;
 
@@ -160,7 +165,63 @@ BldcPwrOut_t Bldc_Ctl_Phase90Ctl(uint8_t ucCurrSection){
 		}
 
 	return pwrOut;
+}
 
+
+
+
+
+BldcPwrOut_t Bldc_Ctl_PhaseCtl_CCW(uint8_t ucCurrSection){
+
+	BldcPwrOut_t pwrOut;
+
+	switch(ucCurrSection){
+
+		case 1:	// Section #1
+			pwrOut.U_phase = BLDC_STEP_PLUS;		// 0
+			pwrOut.V_phase = BLDC_STEP_NEG;		// -
+			pwrOut.W_phase = BLDC_STEP_HiZ;	// +
+			break;
+
+		case 2:	// Section #2
+			pwrOut.U_phase = BLDC_STEP_PLUS;	// +	
+			pwrOut.V_phase = BLDC_STEP_HiZ;		// 0
+			pwrOut.W_phase = BLDC_STEP_NEG;		// -
+			break;
+
+		case 3:	// Section #3
+			pwrOut.U_phase = BLDC_STEP_HiZ;		
+			pwrOut.V_phase = BLDC_STEP_PLUS;		
+			pwrOut.W_phase = BLDC_STEP_NEG;		
+			break;
+
+		case 4:	// Section #4
+			pwrOut.U_phase = BLDC_STEP_NEG;		
+			pwrOut.V_phase = BLDC_STEP_PLUS;		
+			pwrOut.W_phase = BLDC_STEP_HiZ;		
+			break;
+
+		case 5:	// Section #5
+			pwrOut.U_phase = BLDC_STEP_NEG;		
+			pwrOut.V_phase = BLDC_STEP_HiZ;		
+			pwrOut.W_phase = BLDC_STEP_PLUS;		
+			break;
+
+		case 6:	// Section #6
+			pwrOut.U_phase = BLDC_STEP_HiZ;
+			pwrOut.V_phase = BLDC_STEP_NEG;
+			pwrOut.W_phase = BLDC_STEP_PLUS;
+			break;
+
+
+		default:
+			pwrOut.U_phase = BLDC_STEP_HiZ;
+			pwrOut.V_phase = BLDC_STEP_HiZ;
+			pwrOut.W_phase = BLDC_STEP_HiZ;
+			break;
+		}
+
+	return pwrOut;
 }
 
 
