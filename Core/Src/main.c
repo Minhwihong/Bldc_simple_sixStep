@@ -178,7 +178,14 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+  //Bldc_HallPattern_Set(&g_xBldcCtlCtx, g_xBCMMotorHallLoc);
+  Bldc_HallPattern_Set(&g_xBldcCtlCtx, g_xJK42MotorHallLoc);
 
+  while(1){
+ 
+ 
+    Bldc_CtlMain(&g_xBldcCtlCtx, g_usDuty);
+  }
 	
     /* USER CODE END WHILE */
 
