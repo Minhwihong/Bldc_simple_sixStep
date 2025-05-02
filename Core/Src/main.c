@@ -79,217 +79,33 @@ static void MX_TIM15_Init(void);
 
 
 
-BldcPwrOut_t g_xPhasePwrOut;
-BldcHallTb_t g_xHallTb[8];
 
-uint8_t g_ucHall_u = 0;
-uint8_t g_ucHall_v = 0;
-uint8_t g_ucHall_w = 0;
+BldcHallSect_t g_xBCMMotorHallLoc[eSECTION_MAX] = {
+	{0, 0},		// {ucSection, ucHallCode}
+	{6, 1},		// section #6 - Hall #1
+	{2, 2},		// section #2 - Hall #2
+	{1, 3},		// section #1 - Hall #3
+	{4, 4},		// section #4 - Hall #4
+	{5, 5},		// section #5 - Hall #5
+	{3, 6},		// section #3 - Hall #6
+	{7, 7},		// 
+};
 
-uint8_t g_ucControlMethod = 0;
+BldcHallSect_t g_xJK42MotorHallLoc[eSECTION_MAX] = {
+	{0, 0},		// 
+	{6, 1},		// section #3 - Hall #1
+	{2, 2},		// section #5 - Hall #2
+	{1, 3},		// section #4 - Hall #3
+	{4, 4},		// section #1 - Hall #4
+	{5, 5},		// section #2 - Hall #5
+	{3, 6},		// section #6 - Hall #6
+	{7, 7},		// 
+};
 
-uint8_t g_ucHallCombi = 0;
 uint16_t g_usDuty = 0;
 
 
-BldcCommTb_t g_ucHallCommTb[8] = {
-	{0, -1, 	BLDC_STEP_NEG, BLDC_STEP_NEG, BLDC_STEP_NEG},
-
-	{4, 120, 	BLDC_STEP_NEG, BLDC_STEP_PLUS, BLDC_STEP_HiZ},
-	{5, 180, 	BLDC_STEP_NEG, BLDC_STEP_HiZ, BLDC_STEP_PLUS},
-	{1, 240, 	BLDC_STEP_HiZ, BLDC_STEP_NEG, BLDC_STEP_PLUS},
-	{3, 300, 	BLDC_STEP_PLUS, BLDC_STEP_NEG, BLDC_STEP_HiZ},
-	{2, 0, 		BLDC_STEP_PLUS, BLDC_STEP_HiZ, BLDC_STEP_NEG},
-	{6, 60, 	BLDC_STEP_HiZ, BLDC_STEP_PLUS, BLDC_STEP_NEG},
-
-	{4, 361, 	BLDC_STEP_PLUS, BLDC_STEP_PLUS, BLDC_STEP_PLUS},
-};
-
-
-static BldcPwrOut_t PhaseFind(uint8_t step){
-	BldcPwrOut_t pwrOut;
-
-	switch(step){
-
-		case 1:	// Section #1
-			pwrOut.U_phase = BLDC_STEP_PLUS;
-			pwrOut.V_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_NEG;
-			break;
-
-
-		case 2:	// Section #2
-			pwrOut.U_phase = BLDC_STEP_PLUS;
-			pwrOut.V_phase = BLDC_STEP_PLUS;
-			pwrOut.W_phase = BLDC_STEP_NEG;
-			break;
-
-		case 3:	// Section #3
-			pwrOut.U_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_PLUS;
-			pwrOut.W_phase = BLDC_STEP_NEG;
-			break;
-
-		case 4:	// Section #4
-			pwrOut.U_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_PLUS;
-			pwrOut.W_phase = BLDC_STEP_PLUS;
-			break;
-
-		case 5:	// Section #5
-			pwrOut.U_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_NEG;
-			pwrOut.W_phase = BLDC_STEP_PLUS;
-			break;
-
-		case 6:	// Section #6
-			pwrOut.U_phase = BLDC_STEP_PLUS;
-			pwrOut.V_phase = BLDC_STEP_NEG;
-			pwrOut.W_phase = BLDC_STEP_PLUS;
-			break;
-
-
-		default:
-			pwrOut.U_phase = BLDC_STEP_HiZ;
-			pwrOut.V_phase = BLDC_STEP_HiZ;
-			pwrOut.W_phase = BLDC_STEP_HiZ;
-			break;
-		}
-
-	return pwrOut;
-}
-
-static BldcPwrOut_t PhaseCtl90Deg(uint8_t hallCode);
-
-static BldcPwrOut_t PhaseCtl(uint8_t hallCode){
-
-	BldcPwrOut_t pwrOut;
-
-	switch(hallCode){
-
-		case 0:
-			pwrOut.U_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_NEG;
-			break;
-
-
-		case 3:	// Hall Code #3, Section #1
-			pwrOut.U_phase = BLDC_STEP_HiZ;
-			pwrOut.V_phase = BLDC_STEP_PLUS;
-			pwrOut.W_phase = BLDC_STEP_NEG;
-			break;
-
-		case 2:	// Hall Code #2, Section #2
-			pwrOut.U_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_PLUS;
-			pwrOut.W_phase = BLDC_STEP_HiZ;
-			break;
-
-		case 6:	// Hall Code #6, Section #3
-			pwrOut.U_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_HiZ;
-			pwrOut.W_phase = BLDC_STEP_PLUS;
-			break;
-
-		case 4:	// Hall Code #4, Section #4
-			pwrOut.U_phase = BLDC_STEP_HiZ;
-			pwrOut.V_phase = BLDC_STEP_NEG;
-			pwrOut.W_phase = BLDC_STEP_PLUS;
-			break;
-
-		case 5:	// Hall Code #5, Section #5
-			pwrOut.U_phase = BLDC_STEP_PLUS;
-			pwrOut.V_phase = BLDC_STEP_NEG;
-			pwrOut.W_phase = BLDC_STEP_HiZ;
-			break;
-
-		case 1:	// Hall Code #11, Section #6
-			pwrOut.U_phase = BLDC_STEP_PLUS;
-			pwrOut.V_phase = BLDC_STEP_HiZ;
-			pwrOut.W_phase = BLDC_STEP_NEG;
-			break;
-
-		case 7:
-			pwrOut.U_phase = BLDC_STEP_HiZ;
-			pwrOut.V_phase = BLDC_STEP_HiZ;
-			pwrOut.W_phase = BLDC_STEP_HiZ;
-			break;
-
-		default:
-			pwrOut.U_phase = BLDC_STEP_HiZ;
-			pwrOut.V_phase = BLDC_STEP_HiZ;
-			pwrOut.W_phase = BLDC_STEP_HiZ;
-			break;
-		}
-
-	return pwrOut;
-}
-
-
-static void PwrOutCtl(BldcPwrOut_t* pxPwrOut, uint16_t usDuty){
-
-	switch(pxPwrOut->U_phase){
-			case BLDC_STEP_HiZ:
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0) ;
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0) ;
-				break;
-			case BLDC_STEP_PLUS:
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, usDuty) ;
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0) ;
-				break;
-			case BLDC_STEP_NEG:
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0) ;
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 3199) ;
-				break;
-			default:
-				break;
-		}
-
-		switch(pxPwrOut->V_phase){
-			case BLDC_STEP_HiZ:
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0) ;
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 0) ;
-				break;
-			case BLDC_STEP_PLUS:
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, usDuty) ;
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 0) ;
-				break;
-			case BLDC_STEP_NEG:
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0) ;
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 3199) ;
-				break;
-			default:
-				break;
-		}
-
-		switch(pxPwrOut->W_phase){
-			case BLDC_STEP_HiZ:
-				__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_1, 0) ;
-				__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_2, 0) ;
-				break;
-			case BLDC_STEP_PLUS:
-				__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_1, usDuty) ;
-				__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_2, 0) ;
-				break;
-			case BLDC_STEP_NEG:
-				__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_1, 0) ;
-				__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_2, 3199) ;
-				break;
-			default:
-				break;
-		}
-}
-
-
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-
-	if(GPIO_Pin == GPE3_BLDC_HU_Pin || GPIO_Pin == GPE4_BLDC_HV_Pin || GPIO_Pin == GPE5_BLDC_HW_Pin ){
-
-	}
-}
-
+extern uint32_t g_uiOverFlowCnt;
 
 /* USER CODE END 0 */
 
@@ -317,6 +133,14 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
+   //Bldc_HallPattern_Set(&g_xBldcCtlCtx, g_xBCMMotorHallLoc);
+ Bldc_HallPattern_Set(&g_xBldcCtlCtx, g_xJK42MotorHallLoc);
+
+ while(1){
+
+
+   Bldc_CtlMain(&g_xBldcCtlCtx, g_usDuty);
+ }
 
   /* USER CODE END SysInit */
 
@@ -331,6 +155,8 @@ int main(void)
   MX_TIM16_Init();
   MX_TIM15_Init();
   /* USER CODE BEGIN 2 */
+
+  HAL_TIM_Base_Start_IT(&htim6);
 
   HAL_GPIO_WritePin(GPIOB, LINK_DC_EN_Pin, GPIO_PIN_SET);
 
@@ -351,181 +177,13 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-
-	  //GPIOA , GPE3_BLDC_HU_Pin
-	g_ucHall_u = HAL_GPIO_ReadPin(GPIOA, GPE3_BLDC_HU_Pin);
-	g_ucHall_v = HAL_GPIO_ReadPin(GPIOA, GPE4_BLDC_HV_Pin);
-	g_ucHall_w = HAL_GPIO_ReadPin(GPIOA, GPE5_BLDC_HW_Pin);
 
 
-
-
-/* ****************************** Six-step bldc motor control ******************************* */
-	HAL_Delay(500);
-
-
-	g_ucHall_u = HAL_GPIO_ReadPin(GPIOA, GPE3_BLDC_HU_Pin);
-	g_ucHall_v = HAL_GPIO_ReadPin(GPIOA, GPE4_BLDC_HV_Pin);
-	g_ucHall_w = HAL_GPIO_ReadPin(GPIOA, GPE5_BLDC_HW_Pin);
-
-	g_ucHallCombi = (g_ucHall_u) + (g_ucHall_v << 1) + (g_ucHall_w << 2);
-
-
-	HAL_Delay(1000);
-
-	while(1){
-
-		g_ucHall_u = HAL_GPIO_ReadPin(GPIOA, GPE3_BLDC_HU_Pin);
-		g_ucHall_v = HAL_GPIO_ReadPin(GPIOA, GPE4_BLDC_HV_Pin);
-		g_ucHall_w = HAL_GPIO_ReadPin(GPIOA, GPE5_BLDC_HW_Pin);
-
-		g_ucHallCombi = (g_ucHall_u) + (g_ucHall_v << 1) + (g_ucHall_w << 2);
-
-		if(g_ucControlMethod == 0){
-			g_xPhasePwrOut = PhaseCtl90Deg(g_ucHallCombi);
-		}
-		else {
-			g_xPhasePwrOut = PhaseCtl(g_ucHallCombi);
-		}
-
-
-		//PhaseCtl90Deg
-
-		//PhaseFind, PhaseCtl
-
-		PwrOutCtl(&g_xPhasePwrOut, g_usDuty);
-	}
-/* ****************************************************************************************** */
-
-
-
-/* ************************* bldc motor Hall Sensor Position find *************************** */
-
-	//	g_ucHall_u = HAL_GPIO_ReadPin(GPIOA, GPE3_BLDC_HU_Pin);
-	//	g_ucHall_v = HAL_GPIO_ReadPin(GPIOA, GPE4_BLDC_HV_Pin);
-	//	g_ucHall_w = HAL_GPIO_ReadPin(GPIOA, GPE5_BLDC_HW_Pin);
-	//
-	//	g_ucHallCombi = (g_ucHall_u) + (g_ucHall_v << 1) + (g_ucHall_w << 2);
-	//
-	//
-	//	// U phase PWM
-	//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 500) ;
-	//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0) ;
-	//
-	//	// V phase Gnd
-	//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0) ;
-	//	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 3199) ;
-	//
-	//	// W phase Gnd
-	//	__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_1, 0) ;
-	//	__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_2, 3199) ;
-
-
-	for(uint8_t idx=1; idx<7; ++idx){
-
-		g_xPhasePwrOut = PhaseFind(idx);
-
-		//PhaseFind, PhaseCtl
-
-		PwrOutCtl(&g_xPhasePwrOut, 600);
-
-		HAL_Delay(1000);
-
-
-		g_ucHall_u = HAL_GPIO_ReadPin(GPIOA, GPE3_BLDC_HU_Pin);
-		g_ucHall_v = HAL_GPIO_ReadPin(GPIOA, GPE4_BLDC_HV_Pin);
-		g_ucHall_w = HAL_GPIO_ReadPin(GPIOA, GPE5_BLDC_HW_Pin);
-
-		g_xHallTb[idx]._U = g_ucHall_u;
-		g_xHallTb[idx]._V = g_ucHall_v;
-		g_xHallTb[idx]._W = g_ucHall_w;
-
-		g_ucHallCombi = (g_ucHall_u) + (g_ucHall_v << 1) + (g_ucHall_w << 2);
-
-	}
-
-
-
-	g_xPhasePwrOut = PhaseCtl(0);
-	PwrOutCtl(&g_xPhasePwrOut, 0);
-	g_usDuty = 0;
-
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0) ;
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0) ;
-
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0) ;
-	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 0) ;
-
-	__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_1, 0) ;
-	__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_2, 0) ;
-/* ****************************************************************************************** */
-
-
-	while(1){
-
-	}
-
-	//g_xPhasePwrOut = PhaseCtl(g_ucHldcCurrStep);
-
-	//g_xHallTb
-#if 0
-	switch(g_xPhasePwrOut.U_phase){
-		case BLDC_STEP_HiZ:
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0) ;
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0) ;
-			break;
-		case BLDC_STEP_PLUS:
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, g_usDuty) ;
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0) ;
-			break;
-		case BLDC_STEP_NEG:
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0) ;
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 3199) ;
-			break;
-		default:
-			break;
-	}
-
-	switch(g_xPhasePwrOut.V_phase){
-		case BLDC_STEP_HiZ:
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0) ;
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 0) ;
-			break;
-		case BLDC_STEP_PLUS:
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, g_usDuty) ;
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 0) ;
-			break;
-		case BLDC_STEP_NEG:
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0) ;
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 3199) ;
-			break;
-		default:
-			break;
-	}
-
-	switch(g_xPhasePwrOut.W_phase){
-		case BLDC_STEP_HiZ:
-			__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_1, 0) ;
-			__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_2, 0) ;
-			break;
-		case BLDC_STEP_PLUS:
-			__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_1, g_usDuty) ;
-			__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_2, 0) ;
-			break;
-		case BLDC_STEP_NEG:
-			__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_1, 0) ;
-			__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_2, 3199) ;
-			break;
-		default:
-			break;
-	}
-#endif
+	
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+  
   /* USER CODE END 3 */
 }
 
@@ -1045,7 +703,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : GPE3_BLDC_HU_Pin GPE4_BLDC_HV_Pin GPE5_BLDC_HW_Pin */
   GPIO_InitStruct.Pin = GPE3_BLDC_HU_Pin|GPE4_BLDC_HV_Pin|GPE5_BLDC_HW_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -1094,62 +752,19 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+	//HardTimerCallback(htim);
+  /* USER CODE END Callback 0 */
 
-
-static BldcPwrOut_t PhaseCtl90Deg(uint8_t hallCode){
-
-	BldcPwrOut_t pwrOut;
-
-	switch(hallCode){
-
-		case 3:	// Hall Code #3, Section #1
-			pwrOut.U_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_PLUS;
-			pwrOut.W_phase = BLDC_STEP_HiZ;
-			break;
-
-		case 2:	// Hall Code #2, Section #2
-			pwrOut.U_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_HiZ;
-			pwrOut.W_phase = BLDC_STEP_PLUS;
-			break;
-
-		case 6:	// Hall Code #6, Section #3
-			pwrOut.U_phase = BLDC_STEP_HiZ;
-			pwrOut.V_phase = BLDC_STEP_NEG;
-			pwrOut.W_phase = BLDC_STEP_PLUS;
-			break;
-
-		case 4:	// Hall Code #4, Section #4
-			pwrOut.U_phase = BLDC_STEP_PLUS;
-			pwrOut.V_phase = BLDC_STEP_NEG;
-			pwrOut.W_phase = BLDC_STEP_HiZ;
-			break;
-
-		case 5:	// Hall Code #5, Section #5
-			pwrOut.U_phase = BLDC_STEP_PLUS;
-			pwrOut.V_phase = BLDC_STEP_HiZ;
-			pwrOut.W_phase = BLDC_STEP_NEG;
-			break;
-
-		case 1:	// Hall Code #11, Section #6
-			pwrOut.U_phase = BLDC_STEP_HiZ;
-			pwrOut.V_phase = BLDC_STEP_PLUS;
-			pwrOut.W_phase = BLDC_STEP_NEG;
-			break;
-
-
-		default:
-			pwrOut.U_phase = BLDC_STEP_HiZ;
-			pwrOut.V_phase = BLDC_STEP_HiZ;
-			pwrOut.W_phase = BLDC_STEP_HiZ;
-			break;
-		}
-
-	return pwrOut;
+  /* USER CODE BEGIN Callback 1 */
+  if( htim->Instance == TIM6 )
+  {
+    g_uiOverFlowCnt++;
+  }
+  /* USER CODE END Callback 1 */
 }
-
-
 /* USER CODE END 4 */
 
 /**

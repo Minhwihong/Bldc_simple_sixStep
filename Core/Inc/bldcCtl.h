@@ -8,6 +8,20 @@ enum SIX_STEP_STS{
 	BLDC_STEP_NEG,
 };
 
+enum SIX_STEP_POS_IDX{
+	eSECTION_EXCEP1 = 0,
+	eSECTION_1 = 1,
+	eSECTION_2 = 2,
+	eSECTION_3 = 3,
+	eSECTION_4 = 4,
+	eSECTION_5 = 5,
+	eSECTION_6 = 6,
+	eSECTION_EXCEP2 = 7,
+	eSECTION_MAX = 8
+};
+
+
+
 typedef struct BldcCommTb_tag{
 	uint8_t Hall;
 	int32_t Rotator_angle;
@@ -31,15 +45,37 @@ typedef struct BldcPwrOut_tage{
 }BldcPwrOut_t;
 
 
+typedef struct BldcHallSection_tag{
+	uint8_t ucSection;
+	uint8_t ucHallCode;
+}BldcHallSect_t;
+
+
+
+
+typedef struct BldcSixStepCtlCtx_tag{
+	BldcHallTb_t xHallTb[eSECTION_MAX]; 
+	BldcHallSect_t xHallMatchTb[eSECTION_MAX]; 
+	BldcPwrOut_t xPwrOutPattern;
+	uint8_t ucHallCombi;
+	uint8_t ucIsHallLocFind;
+	// GPIO HALL U
+	// GPIO HALL V
+	// GPIO HALL W
+}BldcSixStep_CtlCtx_t;
+
+
 //void BldcPwrOut_t PhaseFind(uint8_t step);
 
 
-uint8_t Bldc_findHallPattern();
+extern BldcSixStep_CtlCtx_t g_xBldcCtlCtx;
 
-void Bldc_PhaseCtl();
-void Bldc_Phase90Ctl();
-
-uint8_t Bldc_GetHallCode();
+uint8_t Bldc_HallPattern_Set(BldcSixStep_CtlCtx_t* pxCtx, BldcHallSect_t predefinePatt[]);
+BldcPwrOut_t HallLocationFind_PwrPattern(uint8_t step);
+void ThreePhasePWMGen_1stSucceed(BldcPwrOut_t* pxPwrOut, uint16_t usDuty);
+BldcPwrOut_t Bldc_Ctl_Phase90Ctl(uint8_t ucCurrSection);
+uint8_t Bldc_findHallPattern(BldcSixStep_CtlCtx_t* pxCtx);
+void Bldc_CtlMain(BldcSixStep_CtlCtx_t* pxCtx, uint32_t uiDuty);
 
 
 #endif
