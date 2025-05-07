@@ -21,6 +21,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "portStm32_Timer.h"
+#include "portStm32_Pwm.h"
+#include "IF_timer.h"
+#include "IF_pwm.h"
 #include "bldcCtl.h"
 /* USER CODE END Includes */
 
@@ -56,7 +60,9 @@ DMA_HandleTypeDef hdma_usart3_rx;
 DMA_HandleTypeDef hdma_usart3_tx;
 
 /* USER CODE BEGIN PV */
+TimerContainer_t g_xTmContainer;
 
+BldcPWM_Ctx_t g_xBldcPwmCtx;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -71,6 +77,8 @@ static void MX_TIM6_Init(void);
 static void MX_TIM16_Init(void);
 static void MX_TIM15_Init(void);
 /* USER CODE BEGIN PFP */
+
+
 
 /* USER CODE END PFP */
 
@@ -104,8 +112,6 @@ BldcHallSect_t g_xJK42MotorHallLoc[eSECTION_MAX] = {
 
 uint16_t g_usDuty = 0;
 
-
-extern uint32_t g_uiOverFlowCnt;
 
 /* USER CODE END 0 */
 
@@ -148,7 +154,9 @@ int main(void)
   MX_TIM15_Init();
   /* USER CODE BEGIN 2 */
 
-  HAL_TIM_Base_Start_IT(&htim6);
+
+  
+ 
 
   HAL_GPIO_WritePin(GPIOB, LINK_DC_EN_Pin, GPIO_PIN_SET);
 
@@ -164,14 +172,25 @@ int main(void)
   HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_2);
 
+  //g_xBldcPwmCtx
+  portSTM32_ChannelMatching(&g_xBldcPwmCtx, &htim1, ePWM_POLE_U_POS, TIM_CHANNEL_1, 3199);
+
+
   HAL_GPIO_WritePin(GPIOB, BLDC_EN_Pin, GPIO_PIN_SET);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+  InitTimer(&g_xTmContainer, (void*)&htim6);
+
   //Bldc_HallPattern_Set(&g_xBldcCtlCtx, g_xBCMMotorHallLoc);
   Bldc_HallPattern_Set(&g_xBldcCtlCtx, g_xJK42MotorHallLoc);
+  InitBldcMeasRPM();
+
+
+
+  TimerContainerCtl(&g_xTmContainer, HARD_TIMER_STARTED);
 
   while(1){
  
@@ -760,7 +779,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 1 */
   if( htim->Instance == TIM6 )
   {
-    g_uiOverFlowCnt++;
+    //g_uiOverFlowCnt++;
+
+    OnTimerPeriodExpired(&g_xTmContainer);
   }
   /* USER CODE END Callback 1 */
 }

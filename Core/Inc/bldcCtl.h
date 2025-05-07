@@ -72,6 +72,11 @@ typedef struct BldcSixStepCtlCtx_tag{
 
 extern BldcSixStep_CtlCtx_t g_xBldcCtlCtx;
 
+
+
+void InitBldcMeasRPM();
+void CalcPeriod_OverflowCnt(void* args);
+
 uint8_t Bldc_HallPattern_Set(BldcSixStep_CtlCtx_t* pxCtx, BldcHallSect_t predefinePatt[]);
 BldcPwrOut_t HallLocationFind_PwrPattern(uint8_t step);
 void ThreePhasePWMGen_1stSucceed(BldcPwrOut_t* pxPwrOut, uint16_t usDuty);

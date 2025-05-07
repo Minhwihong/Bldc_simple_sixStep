@@ -57,7 +57,12 @@
         "pidctrl.h": "c",
         "drvhardtimer.h": "c",
         "taskmnltserialprotocol.h": "c",
-        "bldcctl.h": "c"
+        "bldcctl.h": "c",
+        "portstm32_timer.h": "c",
+        "if_timer.h": "c",
+        "typesimple.h": "c",
+        "portstm32_pwm.h": "c",
+        "if_pwm.h": "c"
     },
     "editor.tokenColorCustomizations": {
         "textMateRules": [

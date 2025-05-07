@@ -1,13 +1,22 @@
 #include "bldcCtl.h"
-
+#include "IF_timer.h"
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim6;
 extern TIM_HandleTypeDef htim15;
+
+extern TimerContainer_t g_xTmContainer;
 
 
 BldcSixStep_CtlCtx_t g_xBldcCtlCtx;
 
 
+
+void InitBldcMeasRPM(){
+	static TimerTask_t xTmTask1;
+
+	xTmTask1 = CreateTimerTask(CalcPeriod_OverflowCnt, (void*)0, 1, HARD_TIMER_STARTED);
+	RegisterTimer(&g_xTmContainer, &xTmTask1);
+}
 
 
 
@@ -349,6 +358,11 @@ uint32_t g_uiOverFlowCnt = 0;
 uint32_t g_uiElectricPeriod = 0;
 float g_fElectricRPM = 0.0f;
 uint8_t g_ucMeasRpmHall = 5;
+
+
+void CalcPeriod_OverflowCnt(void* args){
+	g_uiOverFlowCnt++;
+}
 
 // Unit 1usec
 uint32_t GetRotatePerPeriod(){
