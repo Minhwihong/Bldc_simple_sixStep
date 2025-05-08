@@ -7,7 +7,7 @@
 
 
 
-
+void portSTM32_PWM_StartStop(BldcPWM_Ctx_t* pxCtx, u8 ucBldcCh, u8 ucOnOff);
 void portSTM32_ChannelMatching(BldcPWM_Ctx_t* pxCtx, TIM_HandleTypeDef* pxHwTimer, u8 ucBldcCh, u32 uiHwCh, u32 uiMaxDuty);
 
 void portSTM32_PWM_Generate(void* pxHwTimer, u32 uiDuty, u32 uiCh);

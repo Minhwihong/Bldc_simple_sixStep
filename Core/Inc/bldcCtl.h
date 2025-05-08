@@ -2,6 +2,8 @@
 #define __BLDC_CTL_H__
 
 #include "main.h"
+#include "IF_pwm.h"
+
 enum SIX_STEP_STS{
 	BLDC_STEP_HiZ = 0,
 	BLDC_STEP_PLUS,
@@ -61,6 +63,7 @@ typedef struct BldcSixStepCtlCtx_tag{
 	uint8_t ucIsHallLocFind;
 	uint8_t ucDir;
 	uint16_t usDuty;
+	BldcPWM_Ctx_t* pxPwmCtx;
 	// GPIO HALL U
 	// GPIO HALL V
 	// GPIO HALL W
@@ -79,7 +82,7 @@ void CalcPeriod_OverflowCnt(void* args);
 
 uint8_t Bldc_HallPattern_Set(BldcSixStep_CtlCtx_t* pxCtx, BldcHallSect_t predefinePatt[]);
 BldcPwrOut_t HallLocationFind_PwrPattern(uint8_t step);
-void ThreePhasePWMGen_1stSucceed(BldcPwrOut_t* pxPwrOut, uint16_t usDuty);
+void ThreePhasePWMGen_1stSucceed(BldcPWM_Ctx_t* pxPwmCtx, BldcPwrOut_t* pxPwrOut, uint16_t usDuty);
 BldcPwrOut_t Bldc_Ctl_PhaseCtl_CW(uint8_t ucCurrSection);
 BldcPwrOut_t Bldc_Ctl_PhaseCtl_CCW(uint8_t ucCurrSection);
 uint8_t Bldc_findHallPattern(BldcSixStep_CtlCtx_t* pxCtx);

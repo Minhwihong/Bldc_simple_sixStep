@@ -57,8 +57,8 @@ typedef struct PWM_Context_tag{
     u32 uiLookupChTb[eBLDC_PWM_MAX];
     u32 uiMaxDuty[eBLDC_PWM_MAX];
 
-    u8 ucPwmType;
 
+    u8 ucPwmType;
     PWM_Complementary_t dualCh[eBLDC_PWM_DUAL_MAX];
 }BldcPWM_Ctx_t;
 
@@ -71,10 +71,11 @@ typedef struct DualPWM_Context_tag{
 
 
 
-void PWM_Vitalize(u8 ucCh);
+void PWM_StartStop(BldcPWM_Ctx_t* pxCtx, u8 ucOnOff, u8 ucCh);
 
 
 void PWM_Generate(BldcPWM_Ctx_t* pxCtx, u32 uiDuty, u8 ucCh);
+void PWM_Generate_Complementary(BldcPWM_Ctx_t* pxCtx, u32 uiDuty, u8 ucChP, u8 ucChN);
 void PWM_GenerateMax(BldcPWM_Ctx_t* pxCtx, u8 ucCh);
 
 void PWMDual_Generate(Bldc_DualPWM_Ctx_t* pxCtx, PWM_Complementary_t* xCh, u32 uiDuty);

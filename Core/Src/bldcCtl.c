@@ -60,7 +60,7 @@ uint8_t Bldc_findHallPattern(BldcSixStep_CtlCtx_t* pxCtx){
 
 		//PhaseFind, PhaseCtl
 
-		ThreePhasePWMGen_1stSucceed(&xPhasePwrOut, 600);
+		ThreePhasePWMGen_1stSucceed(pxCtx->pxPwmCtx, &xPhasePwrOut, 600);
 
 		HAL_Delay(1000);
 
@@ -82,7 +82,7 @@ uint8_t Bldc_findHallPattern(BldcSixStep_CtlCtx_t* pxCtx){
 	}
 
 	xPhasePwrOut = HallLocationFind_PwrPattern(0);
-	ThreePhasePWMGen_1stSucceed(&xPhasePwrOut, 0);
+	ThreePhasePWMGen_1stSucceed(pxCtx->pxPwmCtx, &xPhasePwrOut, 0);
 
 
 	for(uint8_t idx=eSECTION_1; idx<eSECTION_EXCEP2; ++idx){
@@ -117,7 +117,7 @@ void Bldc_CtlMain(BldcSixStep_CtlCtx_t* pxCtx, uint32_t uiDuty){
 	}
 	
 
-	ThreePhasePWMGen_1stSucceed(&pxCtx->xPwrOutPattern, pxCtx->usDuty);
+	ThreePhasePWMGen_1stSucceed(pxCtx->pxPwmCtx, &pxCtx->xPwrOutPattern, pxCtx->usDuty);
 }
 
 
@@ -296,8 +296,62 @@ BldcPwrOut_t HallLocationFind_PwrPattern(uint8_t step){
 
 
 
+#if 1
+void ThreePhasePWMGen_1stSucceed(BldcPWM_Ctx_t* pxPwmCtx, BldcPwrOut_t* pxPwrOut, uint16_t usDuty){
 
-void ThreePhasePWMGen_1stSucceed(BldcPwrOut_t* pxPwrOut, uint16_t usDuty){
+	switch(pxPwrOut->U_phase){
+			case BLDC_STEP_HiZ:
+				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_U_POS);
+				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_U_NEG);
+				break;
+			case BLDC_STEP_PLUS:
+				PWM_Generate(pxPwmCtx, usDuty, 	ePWM_POLE_U_POS);
+				PWM_Generate(pxPwmCtx, 0, 		ePWM_POLE_U_NEG);
+				break;
+			case BLDC_STEP_NEG:
+				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_U_POS);
+				PWM_GenerateMax(pxPwmCtx, ePWM_POLE_U_NEG);
+				break;
+			default:
+				break;
+		}
+
+		switch(pxPwrOut->V_phase){
+			case BLDC_STEP_HiZ:
+				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_V_POS);
+				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_V_NEG);
+				break;
+			case BLDC_STEP_PLUS:
+				PWM_Generate(pxPwmCtx, usDuty, 	ePWM_POLE_V_POS);
+				PWM_Generate(pxPwmCtx, 0, 		ePWM_POLE_V_NEG);
+				break;
+			case BLDC_STEP_NEG:
+				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_V_POS);
+				PWM_GenerateMax(pxPwmCtx, ePWM_POLE_V_NEG);
+				break;
+			default:
+				break;
+		}
+
+		switch(pxPwrOut->W_phase){
+			case BLDC_STEP_HiZ:
+				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_W_POS);
+				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_W_NEG);
+				break;
+			case BLDC_STEP_PLUS:
+				PWM_Generate(pxPwmCtx, usDuty, 	ePWM_POLE_W_POS);
+				PWM_Generate(pxPwmCtx, 0, 		ePWM_POLE_W_NEG);
+				break;
+			case BLDC_STEP_NEG:
+				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_W_POS);
+				PWM_GenerateMax(pxPwmCtx, ePWM_POLE_W_NEG);
+				break;
+			default:
+				break;
+		}
+}
+#else
+void ThreePhasePWMGen_1stSucceed(BldcPWM_Ctx_t* pxPwmCtx, BldcPwrOut_t* pxPwrOut, uint16_t usDuty){
 
 	switch(pxPwrOut->U_phase){
 			case BLDC_STEP_HiZ:
@@ -350,7 +404,7 @@ void ThreePhasePWMGen_1stSucceed(BldcPwrOut_t* pxPwrOut, uint16_t usDuty){
 				break;
 		}
 }
-
+#endif
 
 
 

@@ -5,8 +5,8 @@
 ../Core/Src/bldcCtl.c:126:14:Bldc_Ctl_PhaseCtl_CW	24	static
 ../Core/Src/bldcCtl.c:183:14:Bldc_Ctl_PhaseCtl_CCW	24	static
 ../Core/Src/bldcCtl.c:242:14:HallLocationFind_PwrPattern	24	static
-../Core/Src/bldcCtl.c:300:6:ThreePhasePWMGen_1stSucceed	16	static
-../Core/Src/bldcCtl.c:363:6:CalcPeriod_OverflowCnt	16	static
-../Core/Src/bldcCtl.c:368:10:GetRotatePerPeriod	16	static
-../Core/Src/bldcCtl.c:387:7:GetPRM_fromPeriod	24	static
-../Core/Src/bldcCtl.c:408:6:HAL_GPIO_EXTI_Callback	24	static
+../Core/Src/bldcCtl.c:300:6:ThreePhasePWMGen_1stSucceed	24	static
+../Core/Src/bldcCtl.c:417:6:CalcPeriod_OverflowCnt	16	static
+../Core/Src/bldcCtl.c:422:10:GetRotatePerPeriod	16	static
+../Core/Src/bldcCtl.c:441:7:GetPRM_fromPeriod	24	static
+../Core/Src/bldcCtl.c:462:6:HAL_GPIO_EXTI_Callback	24	static

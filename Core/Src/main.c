@@ -154,35 +154,52 @@ int main(void)
   MX_TIM15_Init();
   /* USER CODE BEGIN 2 */
 
-
   
- 
+  /* ******************************* Hardware specific ******************************** */
+  
+  //g_xBldcPwmCtx
+  portSTM32_ChannelMatching(&g_xBldcPwmCtx, &htim1, ePWM_POLE_U_POS, TIM_CHANNEL_1, 3199);
+  portSTM32_ChannelMatching(&g_xBldcPwmCtx, &htim1, ePWM_POLE_U_NEG, TIM_CHANNEL_2, 3199);
 
+  portSTM32_ChannelMatching(&g_xBldcPwmCtx, &htim1, ePWM_POLE_V_POS, TIM_CHANNEL_3, 3199);
+  portSTM32_ChannelMatching(&g_xBldcPwmCtx, &htim1, ePWM_POLE_V_NEG, TIM_CHANNEL_4, 3199);
+
+  portSTM32_ChannelMatching(&g_xBldcPwmCtx, &htim15, ePWM_POLE_W_POS, TIM_CHANNEL_1, 3199);
+  portSTM32_ChannelMatching(&g_xBldcPwmCtx, &htim15, ePWM_POLE_W_NEG, TIM_CHANNEL_2, 3199);
+
+  InitTimer(&g_xTmContainer, (void*)&htim6);
+  /* ********************************************************************************** */
+  
+
+  PWM_StartStop(&g_xBldcPwmCtx, 1, ePWM_POLE_U_POS);
+  PWM_StartStop(&g_xBldcPwmCtx, 1, ePWM_POLE_U_NEG);
+
+  PWM_StartStop(&g_xBldcPwmCtx, 1, ePWM_POLE_V_POS);
+  PWM_StartStop(&g_xBldcPwmCtx, 1, ePWM_POLE_V_NEG);
+
+  PWM_StartStop(&g_xBldcPwmCtx, 1, ePWM_POLE_W_POS);
+  PWM_StartStop(&g_xBldcPwmCtx, 1, ePWM_POLE_W_NEG);
+
+
+  g_xBldcCtlCtx.pxPwmCtx = &g_xBldcPwmCtx;
+  /* ***************************** Motor Driver specific ****************************** */
+  
   HAL_GPIO_WritePin(GPIOB, LINK_DC_EN_Pin, GPIO_PIN_SET);
-
+  HAL_Delay(500);
 
   HAL_GPIO_WritePin(GPIOA, BLDC_CAL_Pin, GPIO_PIN_SET);
   HAL_Delay(1000);
   HAL_GPIO_WritePin(GPIOA, BLDC_CAL_Pin, GPIO_PIN_RESET);
 
-  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
-  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
-  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
-  HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_1);
-  HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_2);
-
-  //g_xBldcPwmCtx
-  portSTM32_ChannelMatching(&g_xBldcPwmCtx, &htim1, ePWM_POLE_U_POS, TIM_CHANNEL_1, 3199);
-
 
   HAL_GPIO_WritePin(GPIOB, BLDC_EN_Pin, GPIO_PIN_SET);
+  /* ********************************************************************************** */
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  InitTimer(&g_xTmContainer, (void*)&htim6);
+  
 
   //Bldc_HallPattern_Set(&g_xBldcCtlCtx, g_xBCMMotorHallLoc);
   Bldc_HallPattern_Set(&g_xBldcCtlCtx, g_xJK42MotorHallLoc);
