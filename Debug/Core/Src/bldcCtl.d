@@ -32,6 +32,8 @@ Core/Src/bldcCtl.o: ../Core/Src/bldcCtl.c ../Core/Inc/bldcCtl.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h \
  D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_pwm.h \
  D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/typeSimple.h \
+ D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_timer.h \
+ D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_gpio.h \
  D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_timer.h
 ../Core/Inc/bldcCtl.h:
 ../Core/Inc/main.h:
@@ -68,4 +70,6 @@ Core/Src/bldcCtl.o: ../Core/Src/bldcCtl.c ../Core/Inc/bldcCtl.h \
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h:
 D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_pwm.h:
 D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/typeSimple.h:
+D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_timer.h:
+D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_gpio.h:
 D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_timer.h:

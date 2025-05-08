@@ -1,5 +1,7 @@
+"./Bsp/IF_gpio.o"
 "./Bsp/IF_pwm.o"
 "./Bsp/IF_timer.o"
+"./Bsp/ST/portStm32_Gpio.o"
 "./Bsp/ST/portStm32_Pwm.o"
 "./Bsp/ST/portStm32_Timer.o"
 "./Bsp/STBoard/boardBCM.o"

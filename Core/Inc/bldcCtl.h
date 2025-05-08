@@ -4,6 +4,10 @@
 #include "main.h"
 #include "IF_pwm.h"
 #include "IF_timer.h"
+#include "IF_gpio.h"
+
+
+
 
 enum SIX_STEP_STS{
 	BLDC_STEP_HiZ = 0,
@@ -56,7 +60,10 @@ typedef struct BldcHallSection_tag{
 
 
 
+
+
 typedef struct BldcSixStepCtlCtx_tag{
+	HallSensePin_t xHallPin;
 	BldcHallTb_t xHallTb[eSECTION_MAX]; 
 	BldcHallSect_t xHallMatchTb[eSECTION_MAX]; 
 	BldcPwrOut_t xPwrOutPattern;
@@ -66,9 +73,8 @@ typedef struct BldcSixStepCtlCtx_tag{
 	uint16_t usDuty;
 	BldcPWM_Ctx_t* pxPwmCtx;
 	TimerCounter_t* pxTmCounter;
-	// GPIO HALL U
-	// GPIO HALL V
-	// GPIO HALL W
+	
+
 }BldcSixStep_CtlCtx_t;
 
 
@@ -93,6 +99,6 @@ BldcPwrOut_t Bldc_Ctl_PhaseCtl_CCW(uint8_t ucCurrSection);
 uint8_t Bldc_findHallPattern(BldcSixStep_CtlCtx_t* pxCtx);
 void Bldc_CtlMain(BldcSixStep_CtlCtx_t* pxCtx, uint32_t uiDuty);
 
-
+void HallEdgeDetected(void* args);
 
 #endif

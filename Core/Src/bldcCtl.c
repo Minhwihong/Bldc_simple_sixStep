@@ -1,9 +1,12 @@
 #include "bldcCtl.h"
 #include "IF_timer.h"
+#include "IF_gpio.h"
 
-extern TIM_HandleTypeDef htim6;
 
 
+extern GpioNode_t g_xGpe_HallU ;
+extern GpioNode_t g_xGpe_HallV ;
+extern GpioNode_t g_xGpe_HallW ;
 
 
 BldcSixStep_CtlCtx_t g_xBldcCtlCtx;
@@ -36,7 +39,7 @@ void InitBldcPwmCtl(BldcSixStep_CtlCtx_t* pxBldcCtx, BldcPWM_Ctx_t* pxPwmCtx){
 
 
 	pxBldcCtx->pxPwmCtx = pxPwmCtx;
-	}
+}
 
 
 
@@ -85,9 +88,9 @@ uint8_t Bldc_findHallPattern(BldcSixStep_CtlCtx_t* pxCtx){
 		HAL_Delay(1000);
 
 
-		ucHall_u = HAL_GPIO_ReadPin(GPIOA, GPE3_BLDC_HU_Pin);
-		ucHall_v = HAL_GPIO_ReadPin(GPIOA, GPE4_BLDC_HV_Pin);
-		ucHall_w = HAL_GPIO_ReadPin(GPIOA, GPE5_BLDC_HW_Pin);
+		ucHall_u = ReadGpio(pxCtx->xHallPin.pxU);
+		ucHall_v = ReadGpio(pxCtx->xHallPin.pxV);
+		ucHall_w = ReadGpio(pxCtx->xHallPin.pxW);
 
 		pxCtx->xHallTb[idx]._U = ucHall_u;
 		pxCtx->xHallTb[idx]._V = ucHall_v;
@@ -120,9 +123,10 @@ void Bldc_CtlMain(BldcSixStep_CtlCtx_t* pxCtx, uint32_t uiDuty){
 	uint8_t ucHallCombi = 0;
 	uint8_t ucSection = 0;
 
-	ucHall_u = HAL_GPIO_ReadPin(GPIOA, GPE3_BLDC_HU_Pin);
-	ucHall_v = HAL_GPIO_ReadPin(GPIOA, GPE4_BLDC_HV_Pin);
-	ucHall_w = HAL_GPIO_ReadPin(GPIOA, GPE5_BLDC_HW_Pin);
+
+	ucHall_u = ReadGpio(pxCtx->xHallPin.pxU);
+	ucHall_v = ReadGpio(pxCtx->xHallPin.pxV);
+	ucHall_w = ReadGpio(pxCtx->xHallPin.pxW);
 
 	ucHallCombi = (ucHall_u) + (ucHall_v << 1) + (ucHall_w << 2);
 	pxCtx->ucHallCombi = ucHallCombi;
@@ -426,24 +430,20 @@ float GetPRM_fromPeriod(float uiPeriod){
 
 
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
 
+void HallEdgeDetected(void* args){
 	uint8_t ucHall_u = 0, ucHall_v = 0, ucHall_w = 0;
 	uint8_t ucHallCombi = 0;
 
-	if(GPIO_Pin == GPE3_BLDC_HU_Pin || GPIO_Pin == GPE4_BLDC_HV_Pin || GPIO_Pin == GPE5_BLDC_HW_Pin ){
+	ucHall_u = ReadGpio(g_xBldcCtlCtx.xHallPin.pxU);
+	ucHall_v = ReadGpio(g_xBldcCtlCtx.xHallPin.pxV);
+	ucHall_w = ReadGpio(g_xBldcCtlCtx.xHallPin.pxW);
 
+	ucHallCombi = (ucHall_u) + (ucHall_v << 1) + (ucHall_w << 2);
 
-		ucHall_u = HAL_GPIO_ReadPin(GPIOA, GPE3_BLDC_HU_Pin);
-		ucHall_v = HAL_GPIO_ReadPin(GPIOA, GPE4_BLDC_HV_Pin);
-		ucHall_w = HAL_GPIO_ReadPin(GPIOA, GPE5_BLDC_HW_Pin);
-
-		ucHallCombi = (ucHall_u) + (ucHall_v << 1) + (ucHall_w << 2);
-
-		if(ucHallCombi == 5){
-			g_uiElectricPeriod = GetRotatePerPeriod(g_xBldcCtlCtx.pxTmCounter);
-			g_fElectricRPM = GetPRM_fromPeriod(g_uiElectricPeriod);
-		}
+	if(ucHallCombi == 5){
+		g_uiElectricPeriod = GetRotatePerPeriod(g_xBldcCtlCtx.pxTmCounter);
+		g_fElectricRPM = GetPRM_fromPeriod(g_uiElectricPeriod);
 	}
 }

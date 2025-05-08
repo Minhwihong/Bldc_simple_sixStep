@@ -25,6 +25,9 @@
 #include "IF_timer.h"
 #include "IF_pwm.h"
 #include "bldcCtl.h"
+
+#include "portStm32_Gpio.h"
+#include "IF_gpio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -86,7 +89,9 @@ static void MX_TIM15_Init(void);
 /* USER CODE BEGIN 0 */
 
 
-
+GpioNode_t g_xGpe_HallU ;
+GpioNode_t g_xGpe_HallV ;
+GpioNode_t g_xGpe_HallW ;
 
 BldcHallSect_t g_xBCMMotorHallLoc[eSECTION_MAX] = {
 	{0, 0},		// {ucSection, ucHallCode}
@@ -156,8 +161,11 @@ int main(void)
 
   
   /* ******************************* Hardware specific ******************************** */
-  BSPConfig_TimPwm(&g_xBldcPwmCtx,  &g_xTmContainer, &g_xTmCounter);
 
+  InitGpioList(NULL);
+
+  BSPConfig_TimPwm(&g_xBldcPwmCtx,  &g_xTmContainer, &g_xTmCounter);
+  BSPConfig_HallSens(&g_xBldcCtlCtx.xHallPin, &g_xGpe_HallU, &g_xGpe_HallV, &g_xGpe_HallW, HallEdgeDetected);
   /* ********************************************************************************** */
   
 
@@ -782,6 +790,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     OnTimerPeriodExpired(&g_xTmContainer);
   }
   /* USER CODE END Callback 1 */
+}
+
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+
+  portStm32_OnGpio_EdgeIsr_Callback(GPIO_Pin);
 }
 /* USER CODE END 4 */
 

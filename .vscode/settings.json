@@ -64,7 +64,8 @@
         "portstm32_pwm.h": "c",
         "if_pwm.h": "c",
         "boardbcm.h": "c",
-        "if_uart.h": "c"
+        "if_uart.h": "c",
+        "portstm32_gpio.h": "c"
     },
     "editor.tokenColorCustomizations": {
         "textMateRules": [
