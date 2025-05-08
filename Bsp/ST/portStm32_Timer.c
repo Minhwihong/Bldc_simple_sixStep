@@ -22,3 +22,26 @@ void OnTimerPeriodExpired(TimerContainer_t* pxTmContainer){
     HWTimerCallback(pxTmContainer);
 
 }
+
+
+
+void portSTM32_InitCountingTimer(TimerCounter_t* pxTimer){
+
+    TIM_HandleTypeDef* pxSTTimer = (TIM_HandleTypeDef*)pxTimer->vxHwTimer;
+
+}
+
+
+u32 portSTM32_GetTimerCount(TimerCounter_t* pxTimer){
+
+    TIM_HandleTypeDef* pxSTTimer = (TIM_HandleTypeDef*)pxTimer->vxHwTimer;
+
+    return __HAL_TIM_GET_COUNTER(pxSTTimer);
+}
+
+
+void portSTM32_ResetTimerCount(TimerCounter_t* pxTimer){
+
+    TIM_HandleTypeDef* pxSTTimer = (TIM_HandleTypeDef*)pxTimer->vxHwTimer;
+    __HAL_TIM_SET_COUNTER(pxSTTimer, 0);
+}

@@ -3,6 +3,7 @@
 
 #include "main.h"
 #include "IF_pwm.h"
+#include "IF_timer.h"
 
 enum SIX_STEP_STS{
 	BLDC_STEP_HiZ = 0,
@@ -64,6 +65,7 @@ typedef struct BldcSixStepCtlCtx_tag{
 	uint8_t ucDir;
 	uint16_t usDuty;
 	BldcPWM_Ctx_t* pxPwmCtx;
+	TimerCounter_t* pxTmCounter;
 	// GPIO HALL U
 	// GPIO HALL V
 	// GPIO HALL W
@@ -76,17 +78,21 @@ typedef struct BldcSixStepCtlCtx_tag{
 extern BldcSixStep_CtlCtx_t g_xBldcCtlCtx;
 
 
+void InitBldcPwmCtl(BldcSixStep_CtlCtx_t* pxBldcCtx, BldcPWM_Ctx_t* pxPwmCtx);
+void InitBldcMeasRPM(TimerContainer_t* pxTmContainer);
 
-void InitBldcMeasRPM();
-void CalcPeriod_OverflowCnt(void* args);
+
 
 uint8_t Bldc_HallPattern_Set(BldcSixStep_CtlCtx_t* pxCtx, BldcHallSect_t predefinePatt[]);
 BldcPwrOut_t HallLocationFind_PwrPattern(uint8_t step);
 void ThreePhasePWMGen_1stSucceed(BldcPWM_Ctx_t* pxPwmCtx, BldcPwrOut_t* pxPwrOut, uint16_t usDuty);
+
 BldcPwrOut_t Bldc_Ctl_PhaseCtl_CW(uint8_t ucCurrSection);
 BldcPwrOut_t Bldc_Ctl_PhaseCtl_CCW(uint8_t ucCurrSection);
+
 uint8_t Bldc_findHallPattern(BldcSixStep_CtlCtx_t* pxCtx);
 void Bldc_CtlMain(BldcSixStep_CtlCtx_t* pxCtx, uint32_t uiDuty);
+
 
 
 #endif

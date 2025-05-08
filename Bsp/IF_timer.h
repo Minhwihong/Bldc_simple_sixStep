@@ -11,6 +11,13 @@ typedef void (*tmCallback)(void*);
 
 
 
+
+typedef struct TimerCounting_tag{
+	void* vxHwTimer;
+
+}TimerCounter_t;
+
+
 typedef struct TimerTask_tag{
 
 	void* args;
@@ -32,11 +39,20 @@ typedef struct TimerContainer_tag{
 
 
 
+
+
+
+
 u8 InitTimer(TimerContainer_t* pxTmContainer, void* vxHwTimer);
 TimerTask_t CreateTimerTask(tmCallback vxCb, void* args, u32 period, u8 StartCondition);
 u8 RegisterTimer(TimerContainer_t* pxTmContainer, TimerTask_t* pxTimer);
 void TimerContainerCtl(TimerContainer_t* pxTmContainer, u8 OnOff);
 void HWTimerCallback(TimerContainer_t* genericTimer);
+
+
+void InitCountingTimer(TimerCounter_t* pxTimer);
+u32 GetTimerCount(TimerCounter_t* pxTimer);
+void ResetTimerCount(TimerCounter_t* pxTimer);
 
 
 #endif

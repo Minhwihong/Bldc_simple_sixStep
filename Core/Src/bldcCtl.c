@@ -1,22 +1,42 @@
 #include "bldcCtl.h"
 #include "IF_timer.h"
-extern TIM_HandleTypeDef htim1;
-extern TIM_HandleTypeDef htim6;
-extern TIM_HandleTypeDef htim15;
 
-extern TimerContainer_t g_xTmContainer;
+extern TIM_HandleTypeDef htim6;
+
+
 
 
 BldcSixStep_CtlCtx_t g_xBldcCtlCtx;
 
+void CalcPeriod_OverflowCnt(void* args);
 
 
-void InitBldcMeasRPM(){
+
+
+void InitBldcMeasRPM(TimerContainer_t* pxTmContainer){
 	static TimerTask_t xTmTask1;
 
 	xTmTask1 = CreateTimerTask(CalcPeriod_OverflowCnt, (void*)0, 1, HARD_TIMER_STARTED);
-	RegisterTimer(&g_xTmContainer, &xTmTask1);
+	RegisterTimer(pxTmContainer, &xTmTask1);
 }
+
+
+
+
+void InitBldcPwmCtl(BldcSixStep_CtlCtx_t* pxBldcCtx, BldcPWM_Ctx_t* pxPwmCtx){
+
+	PWM_StartStop(pxPwmCtx, 1, ePWM_POLE_U_POS);
+	PWM_StartStop(pxPwmCtx, 1, ePWM_POLE_U_NEG);
+
+	PWM_StartStop(pxPwmCtx, 1, ePWM_POLE_V_POS);
+	PWM_StartStop(pxPwmCtx, 1, ePWM_POLE_V_NEG);
+
+	PWM_StartStop(pxPwmCtx, 1, ePWM_POLE_W_POS);
+	PWM_StartStop(pxPwmCtx, 1, ePWM_POLE_W_NEG);
+
+
+	pxBldcCtx->pxPwmCtx = pxPwmCtx;
+	}
 
 
 
@@ -296,7 +316,6 @@ BldcPwrOut_t HallLocationFind_PwrPattern(uint8_t step){
 
 
 
-#if 1
 void ThreePhasePWMGen_1stSucceed(BldcPWM_Ctx_t* pxPwmCtx, BldcPwrOut_t* pxPwrOut, uint16_t usDuty){
 
 	switch(pxPwrOut->U_phase){
@@ -350,61 +369,6 @@ void ThreePhasePWMGen_1stSucceed(BldcPWM_Ctx_t* pxPwmCtx, BldcPwrOut_t* pxPwrOut
 				break;
 		}
 }
-#else
-void ThreePhasePWMGen_1stSucceed(BldcPWM_Ctx_t* pxPwmCtx, BldcPwrOut_t* pxPwrOut, uint16_t usDuty){
-
-	switch(pxPwrOut->U_phase){
-			case BLDC_STEP_HiZ:
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0) ;
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0) ;
-				break;
-			case BLDC_STEP_PLUS:
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, usDuty) ;
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0) ;
-				break;
-			case BLDC_STEP_NEG:
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0) ;
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 3199) ;
-				break;
-			default:
-				break;
-		}
-
-		switch(pxPwrOut->V_phase){
-			case BLDC_STEP_HiZ:
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0) ;
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 0) ;
-				break;
-			case BLDC_STEP_PLUS:
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, usDuty) ;
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 0) ;
-				break;
-			case BLDC_STEP_NEG:
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0) ;
-				__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 3199) ;
-				break;
-			default:
-				break;
-		}
-
-		switch(pxPwrOut->W_phase){
-			case BLDC_STEP_HiZ:
-				__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_1, 0) ;
-				__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_2, 0) ;
-				break;
-			case BLDC_STEP_PLUS:
-				__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_1, usDuty) ;
-				__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_2, 0) ;
-				break;
-			case BLDC_STEP_NEG:
-				__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_1, 0) ;
-				__HAL_TIM_SET_COMPARE(&htim15, TIM_CHANNEL_2, 3199) ;
-				break;
-			default:
-				break;
-		}
-}
-#endif
 
 
 
@@ -419,14 +383,17 @@ void CalcPeriod_OverflowCnt(void* args){
 }
 
 // Unit 1usec
-uint32_t GetRotatePerPeriod(){
+uint32_t GetRotatePerPeriod(TimerCounter_t* pxCntTimer){
 
   uint32_t l_uiCurTimeCnt;
   uint32_t uiPeriod = 0;
 
 
-  l_uiCurTimeCnt = __HAL_TIM_GET_COUNTER(&htim6);
-  __HAL_TIM_SET_COUNTER(&htim6, 0);
+//   l_uiCurTimeCnt = __HAL_TIM_GET_COUNTER(&htim6);
+//   __HAL_TIM_SET_COUNTER(&htim6, 0);
+
+  l_uiCurTimeCnt = GetTimerCount(pxCntTimer);
+  ResetTimerCount(pxCntTimer);
 
   uiPeriod = l_uiCurTimeCnt + (g_uiOverFlowCnt * 1000);
 
@@ -475,7 +442,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		ucHallCombi = (ucHall_u) + (ucHall_v << 1) + (ucHall_w << 2);
 
 		if(ucHallCombi == 5){
-			g_uiElectricPeriod = GetRotatePerPeriod();
+			g_uiElectricPeriod = GetRotatePerPeriod(g_xBldcCtlCtx.pxTmCounter);
 			g_fElectricRPM = GetPRM_fromPeriod(g_uiElectricPeriod);
 		}
 	}

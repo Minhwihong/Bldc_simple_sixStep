@@ -88,3 +88,28 @@ void HWTimerCallback(TimerContainer_t* genericTimer){
         
     }
 }
+
+
+
+
+
+
+
+
+void InitCountingTimer(TimerCounter_t* pxTimer){
+
+    portSTM32_InitCountingTimer(pxTimer);
+}
+
+u32 GetTimerCount(TimerCounter_t* pxTimer){
+
+    return portSTM32_GetTimerCount(pxTimer);
+}
+
+void ResetTimerCount(TimerCounter_t* pxTimer){
+
+    portSTM32_ResetTimerCount(pxTimer);
+}
+
+
+

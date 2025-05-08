@@ -21,8 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "portStm32_Timer.h"
-#include "portStm32_Pwm.h"
+#include "boardBCM.h"
 #include "IF_timer.h"
 #include "IF_pwm.h"
 #include "bldcCtl.h"
@@ -61,6 +60,7 @@ DMA_HandleTypeDef hdma_usart3_tx;
 
 /* USER CODE BEGIN PV */
 TimerContainer_t g_xTmContainer;
+TimerCounter_t g_xTmCounter;
 
 BldcPWM_Ctx_t g_xBldcPwmCtx;
 /* USER CODE END PV */
@@ -156,32 +156,14 @@ int main(void)
 
   
   /* ******************************* Hardware specific ******************************** */
-  
-  //g_xBldcPwmCtx
-  portSTM32_ChannelMatching(&g_xBldcPwmCtx, &htim1, ePWM_POLE_U_POS, TIM_CHANNEL_1, 3199);
-  portSTM32_ChannelMatching(&g_xBldcPwmCtx, &htim1, ePWM_POLE_U_NEG, TIM_CHANNEL_2, 3199);
+  BSPConfig_TimPwm(&g_xBldcPwmCtx,  &g_xTmContainer, &g_xTmCounter);
 
-  portSTM32_ChannelMatching(&g_xBldcPwmCtx, &htim1, ePWM_POLE_V_POS, TIM_CHANNEL_3, 3199);
-  portSTM32_ChannelMatching(&g_xBldcPwmCtx, &htim1, ePWM_POLE_V_NEG, TIM_CHANNEL_4, 3199);
-
-  portSTM32_ChannelMatching(&g_xBldcPwmCtx, &htim15, ePWM_POLE_W_POS, TIM_CHANNEL_1, 3199);
-  portSTM32_ChannelMatching(&g_xBldcPwmCtx, &htim15, ePWM_POLE_W_NEG, TIM_CHANNEL_2, 3199);
-
-  InitTimer(&g_xTmContainer, (void*)&htim6);
   /* ********************************************************************************** */
   
 
-  PWM_StartStop(&g_xBldcPwmCtx, 1, ePWM_POLE_U_POS);
-  PWM_StartStop(&g_xBldcPwmCtx, 1, ePWM_POLE_U_NEG);
-
-  PWM_StartStop(&g_xBldcPwmCtx, 1, ePWM_POLE_V_POS);
-  PWM_StartStop(&g_xBldcPwmCtx, 1, ePWM_POLE_V_NEG);
-
-  PWM_StartStop(&g_xBldcPwmCtx, 1, ePWM_POLE_W_POS);
-  PWM_StartStop(&g_xBldcPwmCtx, 1, ePWM_POLE_W_NEG);
-
-
-  g_xBldcCtlCtx.pxPwmCtx = &g_xBldcPwmCtx;
+  InitBldcPwmCtl(&g_xBldcCtlCtx, &g_xBldcPwmCtx);
+  g_xBldcCtlCtx.pxTmCounter = &g_xTmCounter;
+  
   /* ***************************** Motor Driver specific ****************************** */
   
   HAL_GPIO_WritePin(GPIOB, LINK_DC_EN_Pin, GPIO_PIN_SET);
@@ -200,10 +182,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
   
-
   //Bldc_HallPattern_Set(&g_xBldcCtlCtx, g_xBCMMotorHallLoc);
   Bldc_HallPattern_Set(&g_xBldcCtlCtx, g_xJK42MotorHallLoc);
-  InitBldcMeasRPM();
+  InitBldcMeasRPM(&g_xTmContainer);
 
 
 

@@ -15,4 +15,10 @@ void StopHWTimer(TimerContainer_t* pxTmContainer);
 void StartHWTimer(TimerContainer_t* pxTmContainer);
 void OnTimerPeriodExpired(TimerContainer_t* xInterface);
 
+
+void portSTM32_InitCountingTimer(TimerCounter_t* pxTimer);
+u32 portSTM32_GetTimerCount(TimerCounter_t* pxTimer);
+void portSTM32_ResetTimerCount(TimerCounter_t* pxTimer);
+
+
 #endif

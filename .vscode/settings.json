@@ -62,7 +62,9 @@
         "if_timer.h": "c",
         "typesimple.h": "c",
         "portstm32_pwm.h": "c",
-        "if_pwm.h": "c"
+        "if_pwm.h": "c",
+        "boardbcm.h": "c",
+        "if_uart.h": "c"
     },
     "editor.tokenColorCustomizations": {
         "textMateRules": [
