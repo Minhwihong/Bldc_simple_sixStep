@@ -4,6 +4,14 @@ extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim6;
 extern TIM_HandleTypeDef htim15;
 
+extern ADC_HandleTypeDef hadc1;
+
+MedianFilter_t g_xMedFilter[ADC_MAX_CHANNEL];
+AVG_FILTER_VAR g_xAvgFilter[ADC_MAX_CHANNEL];
+
+u16 g_ausAdcRawData[ADC_MAX_CHANNEL];
+u16 g_ausAdcFilterData[ADC_MAX_CHANNEL];
+
 void BSPConfig_TimPwm(BldcPWM_Ctx_t* pxPwmCtx,  TimerContainer_t* pxTmContainer, TimerCounter_t* pxTmCounter){
 
   portSTM32_ChannelMatching(pxPwmCtx, &htim1, ePWM_POLE_U_POS, TIM_CHANNEL_1, 3199);
@@ -46,5 +54,22 @@ void BSPConfig_HallSens(HallSensePin_t* _pxHallPin, GpioNode_t* pxHallU, GpioNod
   _pxHallPin->pxV = pxHallV;
   _pxHallPin->pxW = pxHallW;
 
+
+}
+
+
+void BSPConfig_Analog(AdcModule_t* pxMod, TimerContainer_t* tmContainer){
+
+  static HwAdcWrapper_t xAdcWrapper;
+
+  xAdcWrapper.pxHwAdc = &hadc1;
+
+  InitAdcDrive(pxMod, &xAdcWrapper, g_ausAdcRawData);
+
+  InitAdcDataFilter(pxMod, g_ausAdcFilterData, g_xMedFilter, g_xAvgFilter);
+
+  StartStopAdcDataFilter(pxMod, tmContainer, 1);
+
+  StartStopAdcWithDMA(pxMod, 1);
 
 }

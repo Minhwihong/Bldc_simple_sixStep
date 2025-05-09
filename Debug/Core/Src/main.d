@@ -30,16 +30,19 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h \
- D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/STBoard/boardBCM.h \
- D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/ST/portStm32_Pwm.h \
+ D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_timer.h \
  D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/typeSimple.h \
  D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_pwm.h \
- D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/typeSimple.h \
- D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/ST/portStm32_Timer.h \
- D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_timer.h \
- D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/ST/portStm32_Gpio.h \
  D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_gpio.h \
  D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_timer.h \
+ D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_Adc.h \
+ D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/ST/portStm32_Adc.h \
+ D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/typeSimple.h \
+ D:/testProjects/prjMotor/Bldc_simple_sixStep/Module/digitFilter.h \
+ D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/STBoard/boardBCM.h \
+ D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/ST/portStm32_Pwm.h \
+ D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/ST/portStm32_Timer.h \
+ D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/ST/portStm32_Gpio.h \
  D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_uart.h \
  ../Core/Inc/bldcCtl.h ../Core/Inc/main.h
 ../Core/Inc/main.h:
@@ -74,16 +77,19 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h:
-D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/STBoard/boardBCM.h:
-D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/ST/portStm32_Pwm.h:
+D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_timer.h:
 D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/typeSimple.h:
 D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_pwm.h:
-D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/typeSimple.h:
-D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/ST/portStm32_Timer.h:
-D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_timer.h:
-D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/ST/portStm32_Gpio.h:
 D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_gpio.h:
 D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_timer.h:
+D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_Adc.h:
+D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/ST/portStm32_Adc.h:
+D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/typeSimple.h:
+D:/testProjects/prjMotor/Bldc_simple_sixStep/Module/digitFilter.h:
+D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/STBoard/boardBCM.h:
+D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/ST/portStm32_Pwm.h:
+D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/ST/portStm32_Timer.h:
+D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/ST/portStm32_Gpio.h:
 D:/testProjects/prjMotor/Bldc_simple_sixStep/Bsp/IF_uart.h:
 ../Core/Inc/bldcCtl.h:
 ../Core/Inc/main.h:

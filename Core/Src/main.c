@@ -21,13 +21,17 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "boardBCM.h"
+
 #include "IF_timer.h"
 #include "IF_pwm.h"
+#include "IF_gpio.h"
+#include "IF_Adc.h"
+
+#include "boardBCM.h"
 #include "bldcCtl.h"
 
 #include "portStm32_Gpio.h"
-#include "IF_gpio.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -66,6 +70,7 @@ TimerContainer_t g_xTmContainer;
 TimerCounter_t g_xTmCounter;
 
 BldcPWM_Ctx_t g_xBldcPwmCtx;
+AdcModule_t g_xAdcModule;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -166,6 +171,7 @@ int main(void)
 
   BSPConfig_TimPwm(&g_xBldcPwmCtx,  &g_xTmContainer, &g_xTmCounter);
   BSPConfig_HallSens(&g_xBldcCtlCtx.xHallPin, &g_xGpe_HallU, &g_xGpe_HallV, &g_xGpe_HallW, HallEdgeDetected);
+  BSPConfig_Analog(&g_xAdcModule, &g_xTmContainer);
   /* ********************************************************************************** */
   
 
