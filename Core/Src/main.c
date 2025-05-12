@@ -120,7 +120,6 @@ BldcHallSect_t g_xJK42MotorHallLoc[eSECTION_MAX] = {
 	{7, 7},		// 
 };
 
-uint16_t g_usDuty = 0;
 
 
 /* USER CODE END 0 */
@@ -207,7 +206,7 @@ int main(void)
   while(1){
  
  
-    Bldc_CtlMain(&g_xBldcCtlCtx, g_usDuty);
+    Bldc_CtlMain(&g_xBldcCtlCtx, 0);
   }
 	
     /* USER CODE END WHILE */
