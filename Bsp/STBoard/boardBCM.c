@@ -14,31 +14,56 @@ u16 g_ausAdcFilterData[ADC_MAX_CHANNEL];
 
 void BSPConfig_TimPwm(BldcPWM_Ctx_t* pxPwmCtx,  TimerContainer_t* pxTmContainer, TimerCounter_t* pxTmCounter){
 
-  portSTM32_ChannelMatching(pxPwmCtx, &htim1, ePWM_POLE_U_POS, TIM_CHANNEL_1, 3199);
-  portSTM32_ChannelMatching(pxPwmCtx, &htim1, ePWM_POLE_U_NEG, TIM_CHANNEL_2, 3199);
+  static Pwm1Ch_HwWrapper xPwmHw_poleU_pos;
+  static Pwm1Ch_HwWrapper xPwmHw_poleU_neg;
 
-  portSTM32_ChannelMatching(pxPwmCtx, &htim1, ePWM_POLE_V_POS, TIM_CHANNEL_3, 3199);
-  portSTM32_ChannelMatching(pxPwmCtx, &htim1, ePWM_POLE_V_NEG, TIM_CHANNEL_4, 3199);
+  static Pwm1Ch_HwWrapper xPwmHw_polev_pos;
+  static Pwm1Ch_HwWrapper xPwmHw_poleV_neg;
 
-  portSTM32_ChannelMatching(pxPwmCtx, &htim15, ePWM_POLE_W_POS, TIM_CHANNEL_1, 3199);
-  portSTM32_ChannelMatching(pxPwmCtx, &htim15, ePWM_POLE_W_NEG, TIM_CHANNEL_2, 3199);
+  static Pwm1Ch_HwWrapper xPwmHw_poleW_pos;
+  static Pwm1Ch_HwWrapper xPwmHw_poleW_neg;
 
-  InitTimer(pxTmContainer, (void*)&htim6);
+  static Tm_HwWrapper basicTimer;
 
-  pxTmCounter->vxHwTimer = (void*)&htim6;
+  portSTM32_PwmChannelInit(&xPwmHw_poleU_pos, &htim1, TIM_CHANNEL_1, 3199);
+  portSTM32_PwmChannelInit(&xPwmHw_poleU_neg, &htim1, TIM_CHANNEL_2, 3199);
+
+  portSTM32_PwmChannelInit(&xPwmHw_polev_pos, &htim1, TIM_CHANNEL_3, 3199);
+  portSTM32_PwmChannelInit(&xPwmHw_poleV_neg, &htim1, TIM_CHANNEL_4, 3199);
+
+  portSTM32_PwmChannelInit(&xPwmHw_poleW_pos, &htim15, TIM_CHANNEL_1, 3199);
+  portSTM32_PwmChannelInit(&xPwmHw_poleW_neg, &htim15, TIM_CHANNEL_2, 3199);
+
+
+  PWM_ChannelMatching(pxPwmCtx, &xPwmHw_poleU_pos, ePWM_POLE_U_POS);
+  PWM_ChannelMatching(pxPwmCtx, &xPwmHw_poleU_neg, ePWM_POLE_U_NEG);
+
+  PWM_ChannelMatching(pxPwmCtx, &xPwmHw_polev_pos, ePWM_POLE_V_POS);
+  PWM_ChannelMatching(pxPwmCtx, &xPwmHw_poleV_neg, ePWM_POLE_V_NEG);
+
+  PWM_ChannelMatching(pxPwmCtx, &xPwmHw_poleW_pos, ePWM_POLE_W_POS);
+  PWM_ChannelMatching(pxPwmCtx, &xPwmHw_poleW_neg, ePWM_POLE_W_NEG);
+
+
+
+  basicTimer.pxTimer = &htim6;
+
+  InitTimer(pxTmContainer, &basicTimer);
+
+  pxTmCounter->vxHwTimer = &basicTimer;
 }
 
 
 void BSPConfig_HallSens(HallSensePin_t* _pxHallPin, GpioNode_t* pxHallU, GpioNode_t* pxHallV, GpioNode_t* pxHallW, EdgeCallback cb){
 
-  static Gpio_Pin_t portHw_HallU = {GPIOA, GPE3_BLDC_HU_Pin };
-  static Gpio_Pin_t portHw_HallV = {GPIOA, GPE4_BLDC_HV_Pin };
-  static Gpio_Pin_t portHw_HallW = {GPIOA, GPE5_BLDC_HW_Pin };
+  static Gpio_HwWrapper portHw_HallU = {GPIOA, GPE3_BLDC_HU_Pin };
+  static Gpio_HwWrapper portHw_HallV = {GPIOA, GPE4_BLDC_HV_Pin };
+  static Gpio_HwWrapper portHw_HallW = {GPIOA, GPE5_BLDC_HW_Pin };
 
 
-  GpioPin_Def(eHALL_U, GPIO_PIN_EDGE, GPI_FILTER_OFF, pxHallU, (void*)&portHw_HallU);
-  GpioPin_Def(eHALL_V, GPIO_PIN_EDGE, GPI_FILTER_OFF, pxHallV, (void*)&portHw_HallV);
-  GpioPin_Def(eHALL_W, GPIO_PIN_EDGE, GPI_FILTER_OFF, pxHallW, (void*)&portHw_HallW);
+  GpioPin_Def(eHALL_U, GPIO_PIN_EDGE, GPI_FILTER_OFF, pxHallU, &portHw_HallU);
+  GpioPin_Def(eHALL_V, GPIO_PIN_EDGE, GPI_FILTER_OFF, pxHallV, &portHw_HallV);
+  GpioPin_Def(eHALL_W, GPIO_PIN_EDGE, GPI_FILTER_OFF, pxHallW, &portHw_HallW);
 
   //HallEdgeDetected
   GpioIsr_RegisterCallback(pxHallU, cb, NULL);

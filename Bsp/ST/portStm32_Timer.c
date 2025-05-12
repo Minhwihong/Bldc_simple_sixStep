@@ -1,47 +1,76 @@
 #include "portStm32_Timer.h"
+#include "IF_timer.h"
 
-void StartHWTimer(TimerContainer_t* pxTmContainer){
+extern TimerContainer_t* g_pxTmContainerMain ;
 
-    TIM_HandleTypeDef* pxSTTimer = (TIM_HandleTypeDef*)pxTmContainer->vxHwTimer;
+
+
+
+void StartHWTimer(Tm_HwWrapper* pxHwTimer){
+
+    TIM_HandleTypeDef* pxSTTimer = pxHwTimer->pxTimer;
 
     HAL_TIM_Base_Start_IT(pxSTTimer);
 }
 
 
-void StopHWTimer(TimerContainer_t* pxTmContainer){
+void StopHWTimer(Tm_HwWrapper* pxHwTimer){
 
-    TIM_HandleTypeDef* pxSTTimer = (TIM_HandleTypeDef*)pxTmContainer->vxHwTimer;
+    TIM_HandleTypeDef* pxSTTimer = pxHwTimer->pxTimer;
 
     HAL_TIM_Base_Stop_IT(pxSTTimer);
 }
 
 
 
-void OnTimerPeriodExpired(TimerContainer_t* pxTmContainer){
+// void OnTimerPeriodExpired(Tm_HwWrapper* pxHwTimer){
 
-    HWTimerCallback(pxTmContainer);
+//     HWTimerCallback(pxTmContainer);
+
+// }
+
+
+
+void portSTM32_InitCountingTimer(Tm_HwWrapper* pxTimer){
+
+    TIM_HandleTypeDef* pxSTTimer = pxTimer->pxTimer;
 
 }
 
 
+u32 portSTM32_GetTimerCount(Tm_HwWrapper* pxTimer){
 
-void portSTM32_InitCountingTimer(TimerCounter_t* pxTimer){
-
-    TIM_HandleTypeDef* pxSTTimer = (TIM_HandleTypeDef*)pxTimer->vxHwTimer;
-
-}
-
-
-u32 portSTM32_GetTimerCount(TimerCounter_t* pxTimer){
-
-    TIM_HandleTypeDef* pxSTTimer = (TIM_HandleTypeDef*)pxTimer->vxHwTimer;
+    TIM_HandleTypeDef* pxSTTimer = pxTimer->pxTimer;
 
     return __HAL_TIM_GET_COUNTER(pxSTTimer);
 }
 
 
-void portSTM32_ResetTimerCount(TimerCounter_t* pxTimer){
+void portSTM32_ResetTimerCount(Tm_HwWrapper* pxTimer){
 
-    TIM_HandleTypeDef* pxSTTimer = (TIM_HandleTypeDef*)pxTimer->vxHwTimer;
+    TIM_HandleTypeDef* pxSTTimer = pxTimer->pxTimer;
     __HAL_TIM_SET_COUNTER(pxSTTimer, 0);
+}
+
+
+
+
+
+
+
+
+
+// Stm32 Timer Period Elapsed Callback
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+
+  /* USER CODE BEGIN Callback 1 */
+  if( htim->Instance == TIM6 ) {
+
+    HWTimerCallback(g_pxTmContainerMain);
+  }
+  /* USER CODE END Callback 1 */
 }

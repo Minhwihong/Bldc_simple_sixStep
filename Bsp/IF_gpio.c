@@ -1,4 +1,3 @@
-#include "portStm32_Gpio.h"
 #include "IF_gpio.h"
 
 
@@ -20,9 +19,10 @@ void InitGpioList(TimerContainer_t* timSrc) {
 }
 
 
-void GpioPin_Def(u16 _usId, u8 _ucMode, u8 _ucUseFilter, GpioNode_t* pxPinNode, void* _pxPin){
+void GpioPin_Def(u16 _usId, u8 _ucMode, u8 _ucUseFilter, GpioNode_t* pxPinNode, Gpio_HwWrapper* _pxPin){
 
-    Gpio_Pin_t* pxPin = ( Gpio_Pin_t*)_pxPin;
+    Gpio_HwWrapper* pxPin = _pxPin;
+
 
     pxPinNode->pxGpioPin = (void*)pxPin;
     pxPinNode->usId = _usId;
@@ -63,15 +63,6 @@ GpioNode_t *CheckDuplicate_N_makeList(GpioNode_t* pxNode)
 		return NULL;
 	}
 
-
-//	do{
-//		if(l_pstCurNode->usId == pxNode->usId){
-//            return NULL;
-//        }
-//
-//		l_pstCurNode = l_pstCurNode->m_pstNext;
-//
-//	}while( l_pstCurNode->m_pstNext != NULL );
 
 	while( l_pstCurNode->m_pstNext != NULL ){
 
@@ -135,19 +126,19 @@ void DigitalFilterCallback(void *l_pParam)
 
 uint8_t ReadGpio(GpioNode_t *pxGpioNode)
 {
-	return portStm32_readPin((Gpio_Pin_t*)pxGpioNode->pxGpioPin);
+	return portHw_readPin(pxGpioNode->pxGpioPin);
 }
 
 void WriteGpio(GpioNode_t *pxGpioNode, u8 l_ucPinState)
 {
 	pxGpioNode->ucValue = l_ucPinState;
 
-    portStm32_writePin((Gpio_Pin_t*)pxGpioNode->pxGpioPin, pxGpioNode->ucValue);
+    portHw_writePin(pxGpioNode->pxGpioPin, pxGpioNode->ucValue);
 }
 
 void ToggleGpio(GpioNode_t *pxGpioNode)
 {
-    portStm32_togglePin((Gpio_Pin_t*)pxGpioNode->pxGpioPin);
+    portHw_togglePin(pxGpioNode->pxGpioPin);
 
 }
 
@@ -161,7 +152,7 @@ void OnGpio_EdgeIsr_Callback(u16 _usPin){
 
     for(u16 i= 0; i<g_stGpioDriverHeader.usTotalNrOfGpio ; i++ ){
 
-        Gpio_Pin_t* pxPin = (Gpio_Pin_t*)l_pstCurNode->pxGpioPin;
+        Gpio_HwWrapper* pxPin = l_pstCurNode->pxGpioPin;
 
         if(pxPin->usPin == _usPin && l_pstCurNode->ucMode == GPIO_PIN_EDGE && l_pstCurNode->fpEdgeCb != NULL ) {
 

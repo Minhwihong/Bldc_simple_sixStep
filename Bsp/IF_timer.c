@@ -1,13 +1,14 @@
 #include "IF_timer.h"
-#include "portStm32_Timer.h"
+//#include "portStm32_Timer.h"
 
 
+TimerContainer_t* g_pxTmContainerMain = (void*)0;
 
 
-
-u8 InitTimer(TimerContainer_t* pxTmContainer, void* vxHwTimer){
+u8 InitTimer(TimerContainer_t* pxTmContainer, Tm_HwWrapper* vxHwTimer){
 
     pxTmContainer->vxHwTimer = vxHwTimer;
+    g_pxTmContainerMain = pxTmContainer;
 
     return 0;
 }
@@ -56,10 +57,10 @@ u8 RegisterTimer(TimerContainer_t* pxTmContainer, TimerTask_t* pxTimer){
 void TimerContainerCtl(TimerContainer_t* pxTmContainer, u8 OnOff){
     
     if(OnOff != 0){
-        StartHWTimer(pxTmContainer);
+        StartHWTimer(pxTmContainer->vxHwTimer);
     }
     else {
-        StopHWTimer(pxTmContainer);
+        StopHWTimer(pxTmContainer->vxHwTimer);
     }
 }
 
@@ -98,17 +99,17 @@ void HWTimerCallback(TimerContainer_t* genericTimer){
 
 void InitCountingTimer(TimerCounter_t* pxTimer){
 
-    portSTM32_InitCountingTimer(pxTimer);
+    portSTM32_InitCountingTimer(pxTimer->vxHwTimer);
 }
 
 u32 GetTimerCount(TimerCounter_t* pxTimer){
 
-    return portSTM32_GetTimerCount(pxTimer);
+    return portSTM32_GetTimerCount(pxTimer->vxHwTimer);
 }
 
 void ResetTimerCount(TimerCounter_t* pxTimer){
 
-    portSTM32_ResetTimerCount(pxTimer);
+    portSTM32_ResetTimerCount(pxTimer->vxHwTimer);
 }
 
 

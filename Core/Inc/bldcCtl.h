@@ -1,11 +1,10 @@
 #ifndef __BLDC_CTL_H__
 #define __BLDC_CTL_H__
 
-#include "main.h"
-#include "IF_pwm.h"
-#include "IF_timer.h"
-#include "IF_gpio.h"
 
+#include "IF_Hal.h"
+
+#include "sensHall.h"
 
 
 
@@ -29,20 +28,7 @@ enum SIX_STEP_POS_IDX{
 
 
 
-typedef struct BldcCommTb_tag{
-	uint8_t Hall;
-	int32_t Rotator_angle;
-	uint8_t U_sts;
-	uint8_t V_sts;
-	uint8_t W_sts;
-}BldcCommTb_t;
 
-typedef struct BldcHallTb_tage{
-	uint8_t _U;
-	uint8_t _V;
-	uint8_t _W;
-
-}BldcHallTb_t;
 
 typedef struct BldcPwrOut_tage{
 	uint8_t U_phase;
@@ -73,7 +59,6 @@ typedef struct BldcSixStepCtlCtx_tag{
 	uint16_t usDuty;
 	BldcPWM_Ctx_t* pxPwmCtx;
 	TimerCounter_t* pxTmCounter;
-	
 
 }BldcSixStep_CtlCtx_t;
 

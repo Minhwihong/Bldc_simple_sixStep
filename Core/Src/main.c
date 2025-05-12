@@ -782,27 +782,9 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-  /* USER CODE BEGIN Callback 0 */
-	//HardTimerCallback(htim);
-  /* USER CODE END Callback 0 */
-
-  /* USER CODE BEGIN Callback 1 */
-  if( htim->Instance == TIM6 )
-  {
-    //g_uiOverFlowCnt++;
-
-    OnTimerPeriodExpired(&g_xTmContainer);
-  }
-  /* USER CODE END Callback 1 */
-}
 
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
-  portStm32_OnGpio_EdgeIsr_Callback(GPIO_Pin);
-}
 /* USER CODE END 4 */
 
 /**

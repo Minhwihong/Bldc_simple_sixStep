@@ -2,6 +2,7 @@
 #define __IF_GPIO_H__
 #include "typeSimple.h"
 #include "IF_timer.h"
+#include "portStm32_Gpio.h"
 
 #define MONO_PIN_HIGH       1
 #define MONO_PIN_LOW        0
@@ -19,7 +20,7 @@ typedef void (*EdgeCallback)(void*);
 typedef struct _GPIO_T_{
     struct _GPIO_T_ *m_pstNext;
 
-	void* pxGpioPin;
+	Gpio_HwWrapper* pxGpioPin;
 	u8 ucFilter;
 	u8 ucValue;
     u8 ucUseFilter;
@@ -48,7 +49,7 @@ typedef struct {
 
 
 void InitGpioList(TimerContainer_t* timSrc) ;
-void GpioPin_Def(u16 _usId, u8 _ucMode, u8 _ucUseFilter, GpioNode_t* pxPinNode, void* pxPin);
+void GpioPin_Def(u16 _usId, u8 _ucMode, u8 _ucUseFilter, GpioNode_t* pxPinNode, Gpio_HwWrapper* pxPin);
 GpioNode_t *CheckDuplicate_N_makeList(GpioNode_t* pxPin);
 
 

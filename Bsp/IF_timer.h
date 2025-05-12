@@ -1,7 +1,6 @@
 #ifndef __IF_TIMER_H__
 #define __IF_TIMER_H__
-#include "typeSimple.h"
-
+#include "portStm32_Timer.h"
 
 #define HARD_TIMER_STOPPED 0
 #define HARD_TIMER_STARTED 1
@@ -13,7 +12,7 @@ typedef void (*tmCallback)(void*);
 
 
 typedef struct TimerCounting_tag{
-	void* vxHwTimer;
+	Tm_HwWrapper* vxHwTimer;
 
 }TimerCounter_t;
 
@@ -32,7 +31,7 @@ typedef struct TimerTask_tag{
 
 
 typedef struct TimerContainer_tag{
-    void* vxHwTimer;
+    Tm_HwWrapper* vxHwTimer;
     TimerTask_t *apxTasks[MAX_TIMER_TASK];
     u8 ucRegisterCount;
 }TimerContainer_t;
@@ -43,7 +42,7 @@ typedef struct TimerContainer_tag{
 
 
 
-u8 InitTimer(TimerContainer_t* pxTmContainer, void* vxHwTimer);
+u8 InitTimer(TimerContainer_t* pxTmContainer, Tm_HwWrapper* vxHwTimer);
 TimerTask_t CreateTimerTask(tmCallback vxCb, void* args, u32 period, u8 StartCondition);
 u8 RegisterTimer(TimerContainer_t* pxTmContainer, TimerTask_t* pxTimer);
 void TimerContainerCtl(TimerContainer_t* pxTmContainer, u8 OnOff);

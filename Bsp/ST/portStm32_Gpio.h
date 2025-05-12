@@ -3,17 +3,17 @@
 
 #include "typeSimple.h"
 #include "stm32l4xx_hal.h"
-#include "IF_gpio.h"
+
 
 typedef struct {
 	GPIO_TypeDef* uiPort;
 	u16 usPin;
-}Gpio_Pin_t;
+}Gpio_HwWrapper;
 
 
-void portStm32_GpioDef( GPIO_TypeDef* uiPort, u16 usPin, u8 ucMode, u8 ucUseFilter);
-u8 portStm32_readPin(Gpio_Pin_t* pxPin);
-void portStm32_writePin(Gpio_Pin_t* pxPin, u8 l_ucPinState);
-void portStm32_togglePin(Gpio_Pin_t* pxPin);
-void portStm32_OnGpio_EdgeIsr_Callback(u16 usPin);
+void portHw_GpioDef( GPIO_TypeDef* uiPort, u16 usPin, u8 ucMode, u8 ucUseFilter);
+u8 portHw_readPin(Gpio_HwWrapper* pxPin);
+void portHw_writePin(Gpio_HwWrapper* pxPin, u8 l_ucPinState);
+void portHw_togglePin(Gpio_HwWrapper* pxPin);
+void portHw_OnGpio_EdgeIsr_Callback(u16 usPin);
 #endif
