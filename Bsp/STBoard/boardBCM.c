@@ -1,5 +1,6 @@
 #include "boardBCM.h"
 
+#if 0
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim6;
 extern TIM_HandleTypeDef htim15;
@@ -98,3 +99,5 @@ void BSPConfig_Analog(AdcModule_t* pxMod, TimerContainer_t* tmContainer){
   StartStopAdcWithDMA(pxMod, 1);
 
 }
+
+#endif

@@ -2,7 +2,7 @@
 #define __PORT_STM32_TIMER_H__
 
 #include "typeSimple.h"
-#include "stm32l4xx_hal.h"
+#include "stm32g4xx_hal.h"
 
 
 

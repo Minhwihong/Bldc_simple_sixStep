@@ -27,6 +27,7 @@ Bsp/ST \
 Bsp/STBoard \
 Core/Src \
 Core/Startup \
-Drivers/STM32L4xx_HAL_Driver/Src \
+Drivers/STM32G4xx_HAL_Driver/Src \
 Module/Util \
+Motor/Control \
 

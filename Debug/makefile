@@ -9,8 +9,9 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include Motor/Control/subdir.mk
 -include Module/Util/subdir.mk
--include Drivers/STM32L4xx_HAL_Driver/Src/subdir.mk
+-include Drivers/STM32G4xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
 -include Bsp/STBoard/subdir.mk
@@ -38,34 +39,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := Bldc_simple_sixStep
+BUILD_ARTIFACT_NAME := Bldc_simple_nucleoG431
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-Bldc_simple_sixStep.elf \
+Bldc_simple_nucleoG431.elf \
 
 MAP_FILES += \
-Bldc_simple_sixStep.map \
+Bldc_simple_nucleoG431.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-Bldc_simple_sixStep.list \
+Bldc_simple_nucleoG431.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: Bldc_simple_sixStep.elf secondary-outputs
+main-build: Bldc_simple_nucleoG431.elf secondary-outputs
 
 # Tool invocations
-Bldc_simple_sixStep.elf Bldc_simple_sixStep.map: $(OBJS) $(USER_OBJS) D:\testProjects\prjMotor\Bldc_simple_sixStep\STM32L431CBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Bldc_simple_sixStep.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\testProjects\prjMotor\Bldc_simple_sixStep\STM32L431CBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Bldc_simple_sixStep.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Bldc_simple_nucleoG431.elf Bldc_simple_nucleoG431.map: $(OBJS) $(USER_OBJS) D:\testProjects\prjMotor\Bldc_simple_sixStep\STM32G431RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Bldc_simple_nucleoG431.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\testProjects\prjMotor\Bldc_simple_sixStep\STM32G431RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Bldc_simple_nucleoG431.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -74,14 +75,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-Bldc_simple_sixStep.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Bldc_simple_sixStep.list"
+Bldc_simple_nucleoG431.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "Bldc_simple_nucleoG431.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) Bldc_simple_sixStep.elf Bldc_simple_sixStep.list Bldc_simple_sixStep.map default.size.stdout
+	-$(RM) Bldc_simple_nucleoG431.elf Bldc_simple_nucleoG431.list Bldc_simple_nucleoG431.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
