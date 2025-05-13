@@ -23,13 +23,6 @@ void StopHWTimer(Tm_HwWrapper* pxHwTimer){
 
 
 
-// void OnTimerPeriodExpired(Tm_HwWrapper* pxHwTimer){
-
-//     HWTimerCallback(pxTmContainer);
-
-// }
-
-
 
 void portSTM32_InitCountingTimer(Tm_HwWrapper* pxTimer){
 

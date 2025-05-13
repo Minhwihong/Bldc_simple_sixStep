@@ -30,7 +30,7 @@
 #include "boardBCM.h"
 #include "bldcCtl.h"
 
-#include "portStm32_Gpio.h"
+//#include "portStm32_Gpio.h"
 
 /* USER CODE END Includes */
 
