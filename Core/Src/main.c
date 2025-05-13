@@ -107,12 +107,12 @@ BldcHallSect_t g_xJK42MotorHallLoc[eSECTION_MAX] = {
 	{7, 7},		//
 };
 
-//static uint16_t duty1 = 2800;
-//static uint16_t duty2 = 800;
-//static uint16_t duty3 = 1200;
-//static uint16_t duty4 = 1600;
-//static uint16_t duty5 = 2000;
-//static uint16_t duty6 = 2400;
+static uint16_t duty1 = 0;
+static uint16_t duty2 = 0;
+static uint16_t duty3 = 0;
+static uint16_t duty4 = 0;
+static uint16_t duty5 = 0;
+static uint16_t duty6 = 0;
 /* USER CODE END 0 */
 
 /**
@@ -162,6 +162,11 @@ int main(void)
 
   InitBldcPwmCtl(&g_xBldcCtlCtx, &g_xBldcPwmCtx);
   g_xBldcCtlCtx.pxTmCounter = &g_xTmCounter;
+
+  Bldc_HallPattern_Set(&g_xBldcCtlCtx, g_xJK42MotorHallLoc);
+  InitBldcMeasRPM(&g_xTmContainer);
+
+  TimerContainerCtl(&g_xTmContainer, HARD_TIMER_STARTED);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -171,9 +176,10 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  Bldc_CtlMain(&g_xBldcCtlCtx, 0);
 //	  PWM_Generate(&g_xBldcPwmCtx, duty1, ePWM_POLE_U_POS);
 //	  PWM_Generate(&g_xBldcPwmCtx, duty2, ePWM_POLE_U_NEG);
-//
+
 //	  PWM_Generate(&g_xBldcPwmCtx, duty3, ePWM_POLE_V_POS);
 //	  PWM_Generate(&g_xBldcPwmCtx, duty4, ePWM_POLE_V_NEG);
 //
@@ -632,7 +638,7 @@ static void MX_TIM3_Init(void)
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {

@@ -12,7 +12,7 @@
         "CAN1",
         "USB_OTG_FS",
         "USE_HAL_DRIVER",
-        "STM32L431xx",
+        "STM32G431xx",
         "__GNUC__"
       ],
       "compilerPath": "C:\\ST\\STM32CubeIDE_1.16.0\\STM32CubeIDE\\plugins\\com.st.stm32cube.ide.mcu.externaltools.gnu-tools-for-stm32.12.3.rel1.win32_1.0.200.202406191623\\tools\\bin\\arm-none-eabi-gcc.exe",
@@ -33,7 +33,7 @@
         "CAN1",
         "USB_OTG_FS",
         "USE_HAL_DRIVER",
-        "STM32L431xx",
+        "STM32G431xx",
         "__GNUC__"
       ],
       "windowsSdkVersion": "10.0.19041.0",
@@ -59,7 +59,7 @@
         "Third_Party"
       ],
       "defines": [
-        "STM32L431xx",
+        "STM32G431xx",
         "USE_HAL_DRIVER"
       ],
       "compilerPath": "C:\\USERS\\HWIHONG MIN\\APPDATA\\ROAMING\\CODE\\USER\\GLOBALSTORAGE\\BMD.STM32-FOR-VSCODE\\@XPACK-DEV-TOOLS\\ARM-NONE-EABI-GCC\\12.2.1-1.2.1\\.CONTENT\\BIN\\ARM-NONE-EABI-GCC.EXE"
