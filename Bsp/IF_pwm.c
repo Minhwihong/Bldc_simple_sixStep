@@ -12,6 +12,7 @@ void PWM_ChannelMatching(BldcPWM_Ctx_t* pxBldcCtx, Pwm1Ch_HwWrapper* pxHw, u8 uc
 
     pxBldcCtx->pxPwmSrc[ucBldcCh] = pxHw;
     pxBldcCtx->ucChId[ucBldcCh] = ucBldcCh;
+    pxBldcCtx->uiMaxDuty[ucBldcCh] = pxHw->uiMaxDuty;
     //pxBldcCtx->ucChId = 
 }
 

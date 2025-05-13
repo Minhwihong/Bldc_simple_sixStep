@@ -98,12 +98,12 @@ BldcHallSect_t g_xBCMMotorHallLoc[eSECTION_MAX] = {
 
 BldcHallSect_t g_xJK42MotorHallLoc[eSECTION_MAX] = {
 	{0, 0},		//
-	{6, 1},		// section #3 - Hall #1
-	{2, 2},		// section #5 - Hall #2
-	{1, 3},		// section #4 - Hall #3
-	{4, 4},		// section #1 - Hall #4
-	{5, 5},		// section #2 - Hall #5
-	{3, 6},		// section #6 - Hall #6
+	{3, 1},		// section #3 - Hall #1
+	{5, 2},		// section #5 - Hall #2
+	{4, 3},		// section #4 - Hall #3
+	{1, 4},		// section #1 - Hall #4
+	{2, 5},		// section #2 - Hall #5
+	{6, 6},		// section #6 - Hall #6
 	{7, 7},		//
 };
 
@@ -167,6 +167,8 @@ int main(void)
   InitBldcMeasRPM(&g_xTmContainer);
 
   TimerContainerCtl(&g_xTmContainer, HARD_TIMER_STARTED);
+
+  //Bldc_findHallPattern(&g_xBldcCtlCtx);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -638,7 +640,7 @@ static void MX_TIM3_Init(void)
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_LOW;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
@@ -760,13 +762,13 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pins : GPE_HALL_3_Pin GPE_HALL_2_Pin */
   GPIO_InitStruct.Pin = GPE_HALL_3_Pin|GPE_HALL_2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : GPE_HALL_1_Pin */
   GPIO_InitStruct.Pin = GPE_HALL_1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPE_HALL_1_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/

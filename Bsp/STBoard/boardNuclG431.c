@@ -97,6 +97,6 @@ void BSPConfig_Analog(AdcModule_t* pxMod, TimerContainer_t* tmContainer){
 
   StartStopAdcDataFilter(pxMod, tmContainer, 1);
 
-  StartStopAdcWithDMA(pxMod, 1);
+  //StartStopAdcWithDMA(pxMod, 1);
 
 }

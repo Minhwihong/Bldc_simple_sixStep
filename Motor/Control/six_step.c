@@ -6,11 +6,15 @@ extern GpioNode_t g_xGpe_HallU ;
 extern GpioNode_t g_xGpe_HallV ;
 extern GpioNode_t g_xGpe_HallW ;
 
+static uint16_t g_usMaxDuty = 0;
+
+uint16_t g_usMaxPowerTm = 0;
+
 
 BldcSixStep_CtlCtx_t g_xBldcCtlCtx;
 
 void CalcPeriod_OverflowCnt(void* args);
-
+void ThreePhasePWMGen_1stSucceed_6pwm(BldcPWM_Ctx_t* pxPwmCtx, BldcPwrOut_t* pxPwrOut, uint16_t usDuty);
 
 
 
@@ -34,6 +38,8 @@ void InitBldcPwmCtl(BldcSixStep_CtlCtx_t* pxBldcCtx, BldcPWM_Ctx_t* pxPwmCtx){
 
 	PWM_StartStop(pxPwmCtx, 1, ePWM_POLE_W_POS);
 	PWM_StartStop(pxPwmCtx, 1, ePWM_POLE_W_NEG);
+
+	g_usMaxDuty = pxPwmCtx->uiMaxDuty[ePWM_POLE_U_POS];
 
 
 	pxBldcCtx->pxPwmCtx = pxPwmCtx;
@@ -81,7 +87,8 @@ uint8_t Bldc_findHallPattern(BldcSixStep_CtlCtx_t* pxCtx){
 
 		//PhaseFind, PhaseCtl
 
-		ThreePhasePWMGen_1stSucceed(pxCtx->pxPwmCtx, &xPhasePwrOut, 600);
+		//ThreePhasePWMGen_1stSucceed(pxCtx->pxPwmCtx, &xPhasePwrOut, 600);
+		ThreePhasePWMGen_1stSucceed_6pwm(pxCtx->pxPwmCtx, &xPhasePwrOut, 1600);
 
 		HAL_Delay(1000);
 
@@ -103,7 +110,8 @@ uint8_t Bldc_findHallPattern(BldcSixStep_CtlCtx_t* pxCtx){
 	}
 
 	xPhasePwrOut = HallLocationFind_PwrPattern(0);
-	ThreePhasePWMGen_1stSucceed(pxCtx->pxPwmCtx, &xPhasePwrOut, 0);
+	//ThreePhasePWMGen_1stSucceed(pxCtx->pxPwmCtx, &xPhasePwrOut, 0);
+	ThreePhasePWMGen_1stSucceed_6pwm(pxCtx->pxPwmCtx, &xPhasePwrOut, 0);
 
 
 	for(uint8_t idx=eSECTION_1; idx<eSECTION_EXCEP2; ++idx){
@@ -120,6 +128,9 @@ void Bldc_CtlMain(BldcSixStep_CtlCtx_t* pxCtx, uint32_t uiDuty){
 	uint8_t ucHall_u = 0, ucHall_v = 0, ucHall_w = 0;
 	uint8_t ucHallCombi = 0;
 	uint8_t ucSection = 0;
+
+	static u32 duty_pre = 0;
+	static u16 usDutyMax = 4000;
 
 
 	ucHall_u = ReadGpio(pxCtx->xHallPin.pxU);
@@ -138,8 +149,15 @@ void Bldc_CtlMain(BldcSixStep_CtlCtx_t* pxCtx, uint32_t uiDuty){
 		pxCtx->xPwrOutPattern = Bldc_Ctl_PhaseCtl_CCW(ucSection);
 	}
 
+	if(duty_pre == 0 && pxCtx->usDuty != 0){
+		g_usMaxPowerTm = 500;
+	}
 
-	ThreePhasePWMGen_1stSucceed(pxCtx->pxPwmCtx, &pxCtx->xPwrOutPattern, pxCtx->usDuty);
+	duty_pre = pxCtx->usDuty;
+
+	ThreePhasePWMGen_1stSucceed_6pwm(pxCtx->pxPwmCtx, &pxCtx->xPwrOutPattern, pxCtx->usDuty);
+	//ThreePhasePWMGen_1stSucceed(pxCtx->pxPwmCtx, &pxCtx->xPwrOutPattern, pxCtx->usDuty);
+
 }
 
 
@@ -374,6 +392,67 @@ void ThreePhasePWMGen_1stSucceed(BldcPWM_Ctx_t* pxPwmCtx, BldcPwrOut_t* pxPwrOut
 
 
 
+
+
+void ThreePhasePWMGen_1stSucceed_6pwm(BldcPWM_Ctx_t* pxPwmCtx, BldcPwrOut_t* pxPwrOut, uint16_t usDuty){
+
+	switch(pxPwrOut->U_phase){
+			case BLDC_STEP_HiZ:
+				// POS : L, NEG : H
+				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_U_POS);
+				PWM_Generate(pxPwmCtx, g_usMaxDuty, ePWM_POLE_U_NEG);		// Normal High
+				break;
+			case BLDC_STEP_PLUS:
+				// POS : pwm, NEG : H
+				PWM_Generate(pxPwmCtx, g_usMaxDuty, ePWM_POLE_U_POS);
+				PWM_Generate(pxPwmCtx, usDuty, 		ePWM_POLE_U_NEG);		// Normal High
+				break;
+			case BLDC_STEP_NEG:
+				// POS : L, NEG : L
+				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_U_POS);
+				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_U_NEG);		// Normal High
+				break;
+			default:
+				break;
+		}
+
+		switch(pxPwrOut->V_phase){
+			case BLDC_STEP_HiZ:
+				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_V_POS);
+				PWM_Generate(pxPwmCtx, g_usMaxDuty, ePWM_POLE_V_NEG);		// Normal High
+				break;
+			case BLDC_STEP_PLUS:
+				PWM_Generate(pxPwmCtx, g_usMaxDuty, ePWM_POLE_V_POS);
+				PWM_Generate(pxPwmCtx, usDuty, 		ePWM_POLE_V_NEG);		// Normal High
+				break;
+			case BLDC_STEP_NEG:
+				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_V_POS);
+				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_V_NEG);		// Normal High
+				break;
+			default:
+				break;
+		}
+
+		switch(pxPwrOut->W_phase){
+			case BLDC_STEP_HiZ:
+				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_W_POS);
+				PWM_Generate(pxPwmCtx, g_usMaxDuty, ePWM_POLE_W_NEG);		// Normal High
+				break;
+			case BLDC_STEP_PLUS:
+				PWM_Generate(pxPwmCtx, g_usMaxDuty, ePWM_POLE_W_POS);
+				PWM_Generate(pxPwmCtx, usDuty, 		ePWM_POLE_W_NEG);		// Normal High
+				break;
+			case BLDC_STEP_NEG:
+				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_W_POS);
+				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_W_NEG);		// Normal High
+				break;
+			default:
+				break;
+		}
+}
+
+
+
 uint32_t g_uiOverFlowCnt = 0;
 uint32_t g_uiElectricPeriod = 0;
 float g_fElectricRPM = 0.0f;
@@ -382,6 +461,10 @@ uint8_t g_ucMeasRpmHall = 5;
 
 void CalcPeriod_OverflowCnt(void* args){
 	g_uiOverFlowCnt++;
+
+	if(g_usMaxPowerTm != 0){
+		g_usMaxPowerTm--;
+	}
 }
 
 // Unit 1usec
