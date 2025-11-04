@@ -21,9 +21,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "IF_HAL.h"
-#include "boardNuclG431.h"
-#include "six_step.h"
+#include "tiny_printf.h"
+#include "pattern_mapping.h"
+#include "motorCtl.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,7 +54,11 @@ TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim6;
 
 /* USER CODE BEGIN PV */
-
+void _putchar(char character)
+{
+  // send char to console etc.
+  HAL_UART_Transmit(&hlpuart1, (uint8_t*)(&character), 1, 20) ;
+}
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -74,7 +78,11 @@ static void MX_TIM3_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+uint16_t testPwmVal = 0;
 
+
+
+#if 0
 TimerContainer_t g_xTmContainer;
 TimerCounter_t g_xTmCounter;
 
@@ -107,12 +115,37 @@ BldcHallSect_t g_xJK42MotorHallLoc[eSECTION_MAX] = {
 	{7, 7},		//
 };
 
+/* ******************************
+ *
+ * (section #4 - Hall #3) -> (section #3 - Hall #1) -> (section #2 - Hall #5) -> (section #1 - Hall #4) -> (section #6 - Hall #6) -> (section #5 - Hall #2)
+ * */
+
 static uint16_t duty1 = 0;
 static uint16_t duty2 = 0;
 static uint16_t duty3 = 0;
 static uint16_t duty4 = 0;
 static uint16_t duty5 = 0;
 static uint16_t duty6 = 0;
+#endif
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+
+	switch(GPIO_Pin){
+		case GPE_HALL_1_Pin:
+			//ReadHallSensors();
+			break;
+
+		case GPE_HALL_2_Pin:
+			break;
+
+		case GPE_HALL_3_Pin:
+			break;
+
+		default:	break;
+	}
+}
+
+
 /* USER CODE END 0 */
 
 /**
@@ -149,44 +182,96 @@ int main(void)
   MX_LPUART1_UART_Init();
   MX_TIM6_Init();
   MX_ADC2_Init();
-  MX_TIM1_Init();
+  //MX_TIM1_Init();
   MX_USART3_UART_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-  InitGpioList(NULL);
 
-  BSPConfig_TimPwm(&g_xBldcPwmCtx,  &g_xTmContainer, &g_xTmCounter);
-  BSPConfig_HallSens(&g_xBldcCtlCtx.xHallPin, &g_xGpe_HallU, &g_xGpe_HallV, &g_xGpe_HallW, HallEdgeDetected);
-  BSPConfig_Analog(&g_xAdcModule, &g_xTmContainer);
-
-  InitBldcPwmCtl(&g_xBldcCtlCtx, &g_xBldcPwmCtx);
-  g_xBldcCtlCtx.pxTmCounter = &g_xTmCounter;
-
-  Bldc_HallPattern_Set(&g_xBldcCtlCtx, g_xJK42MotorHallLoc);
-  InitBldcMeasRPM(&g_xTmContainer);
-
-  TimerContainerCtl(&g_xTmContainer, HARD_TIMER_STARTED);
+  __HAL_TIM_SET_COUNTER(&htim1, 0);
+  //__HAL_TIM_SET_COUNTER(&htim3, 0);
 
   //Bldc_findHallPattern(&g_xBldcCtlCtx);
   /* USER CODE END 2 */
+  printf("Hello Motor World!\r\n");
 
+  uint8_t state_pre = 0xff;
+
+
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
   /* Infinite loop */
+
+  HAL_Delay(1000);
+  printf("5\r\n");
+  HAL_Delay(1000);
+  printf("4\r\n");
+  HAL_Delay(1000);
+  printf("3\r\n");
+  HAL_Delay(1000);
+  printf("2\r\n");
+  HAL_Delay(1000);
+  printf("1\r\n");
+  testPwmVal = 400;
+
+
+//  PatternFindWay2();
+//
+//  while(1);
+
+
+  uint32_t targetTick = HAL_GetTick();
+  uint8_t phase = 0;
+
+  ApplyCommutation_DRV832x(7, 300); // align
+  HAL_Delay(200);
+
+  testPwmVal = 400;
   /* USER CODE BEGIN WHILE */
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  Bldc_CtlMain(&g_xBldcCtlCtx, 0);
-//	  PWM_Generate(&g_xBldcPwmCtx, duty1, ePWM_POLE_U_POS);
-//	  PWM_Generate(&g_xBldcPwmCtx, duty2, ePWM_POLE_U_NEG);
 
-//	  PWM_Generate(&g_xBldcPwmCtx, duty3, ePWM_POLE_V_POS);
-//	  PWM_Generate(&g_xBldcPwmCtx, duty4, ePWM_POLE_V_NEG);
-//
-//	  PWM_Generate(&g_xBldcPwmCtx, duty5, ePWM_POLE_W_POS);
-//	  PWM_Generate(&g_xBldcPwmCtx, duty6, ePWM_POLE_W_NEG);
+	uint8_t state = ReadHallSensors();
+
+//	if(state_pre != state){
+//		printf("state : %d\r\n", state);
+//	}
+
+	//testPwmVal
+	ApplyCommutation_DRV832x(state, testPwmVal);
+
+	state_pre = state;
+
+	uint32_t currTick = HAL_GetTick();
+
+	if(currTick > targetTick+200){
+
+		targetTick = currTick;
+
+		if(phase != 0){
+			testPwmVal += 30;
+
+			if(testPwmVal >= 1500){
+				phase = 0;
+			}
+		}
+		else {
+			testPwmVal -= 30;
+
+			if(testPwmVal <= 100){
+				phase = 1;
+			}
+		}
+
+
+
+	}
+
+
   }
   /* USER CODE END 3 */
 }
@@ -779,6 +864,23 @@ static void MX_GPIO_Init(void)
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
+  /* Unipolor control pin */
+//	GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1;
+//	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+//	GPIO_InitStruct.Pull = GPIO_NOPULL;
+//	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+//	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+//
+//	GPIO_InitStruct.Pin = GPIO_PIN_7;
+//	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+//	GPIO_InitStruct.Pull = GPIO_NOPULL;
+//	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+//	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 /* USER CODE END MX_GPIO_Init_2 */
 }
 

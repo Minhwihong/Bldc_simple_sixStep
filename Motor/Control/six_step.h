@@ -26,7 +26,30 @@ enum SIX_STEP_POS_IDX{
 };
 
 
+#if 0
+BldcHallSect_t g_xBCMMotorHallLoc[eSECTION_MAX] = {
+	{0, 0},		// {ucSection, ucHallCode}
+	{6, 1},		// section #6 - Hall #1
+	{2, 2},		// section #2 - Hall #2
+	{1, 3},		// section #1 - Hall #3
+	{4, 4},		// section #4 - Hall #4
+	{5, 5},		// section #5 - Hall #5
+	{3, 6},		// section #3 - Hall #6
+	{7, 7},		//
+};
 
+
+BldcHallSect_t g_xJK42MotorHallLoc[eSECTION_MAX] = {
+	{0, 0},		//
+	{3, 1},		// section #3 - Hall #1
+	{5, 2},		// section #5 - Hall #2
+	{4, 3},		// section #4 - Hall #3
+	{1, 4},		// section #1 - Hall #4
+	{2, 5},		// section #2 - Hall #5
+	{6, 6},		// section #6 - Hall #6
+	{7, 7},		//
+};
+#endif
 
 
 typedef struct BldcPwrOut_tage{
