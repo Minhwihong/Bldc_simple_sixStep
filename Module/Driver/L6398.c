@@ -9,7 +9,7 @@ IGpio_t g_xGpo_phaseU_lowside;
 IGpio_t g_xGpo_phaseV_lowside;
 IGpio_t g_xGpo_phaseW_lowside;
 
-void InitDriver_Unipolar(L6398_Unipolar_t* pxDrive){
+void InitL6398_Unipolar(L6398_Unipolar_t* pxDrive){
 
     PlatformConfig_6stepUniPolar(&g_xPwm_phaseU_highside, &g_xPwm_phaseV_highside, &g_xPwm_phaseW_highside,
 		&g_xGpo_phaseU_lowside, &g_xGpo_phaseU_lowside, &g_xGpo_phaseU_lowside);
@@ -37,6 +37,65 @@ void InitDriver_Unipolar(L6398_Unipolar_t* pxDrive){
 }
 
 
+
+
+void Apply_L6398_CommutationUnipolar(void* pvDriver, uint8_t state, float pwmVal)
+{
+
+	L6398_Unipolar_t* pxDriver = (L6398_Unipolar_t*)pvDriver;
+
+	switch (state)
+	{
+		case 4:  // Hall: 001 -> B-PWM, C-Low
+			//DrvL6398_6Step_UniPolar_GateCtl(L6398_Unipolar_t* pxDrv, u8 phase, u8 ctl, float duty)
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_U, _6STEP_PWM_IN, (float)pwmVal);
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_V, _6STEP_HiZ, (float)0);
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_W, _6STEP_LOWSIDE_ON, (float)0);
+			break;
+
+		case 2:  // Hall: 010 -> A-PWM, C-Low  -----
+            DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_U, _6STEP_LOWSIDE_ON, 0);  // A: Low
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_V, _6STEP_PWM_IN, pwmVal); // B: PWM
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_W, _6STEP_HiZ, 0);  		// C: Off
+			break;
+
+		case 6:  // Hall: 011 -> A-PWM, B-Low
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_U, _6STEP_HiZ, 0);  		// A: Off
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_V, _6STEP_PWM_IN, pwmVal); // B: PWM
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_W, _6STEP_LOWSIDE_ON, 0);  // C: Low
+			break;
+
+		case 1:  // Hall: 100 -> C-PWM, A-Low
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_U, _6STEP_HiZ, 0);  		// A: Off
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_V, _6STEP_LOWSIDE_ON, 0);  // B: Low
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_W, _6STEP_PWM_IN, pwmVal); // C: PWM
+			break;
+
+		case 5:  // Hall: 101 -> C-PWM, B-Low
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_U, _6STEP_PWM_IN, pwmVal); // A: PWM
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_V, _6STEP_LOWSIDE_ON, 0);  // B: Low
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_W, _6STEP_HiZ, 0);  		// C: Off
+			break;
+
+		case 3:  // Hall: 110 -> B-PWM, A-Low
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_U, _6STEP_LOWSIDE_ON, 0);  // A: Low
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_V, _6STEP_HiZ, 0);  		// B: Off
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_W, _6STEP_PWM_IN, pwmVal); // C: PWM
+			break;
+
+        case 7:  // align
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver,POLE_U, _6STEP_PWM_IN, pwmVal);  
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver,POLE_V, _6STEP_LOWSIDE_ON, 0);  	
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver,POLE_W, _6STEP_LOWSIDE_ON, 0);  	
+			break;
+
+		default:  // Invalid states (0, 7)
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_U, _6STEP_HiZ, 0);  // A: Off
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_V, _6STEP_HiZ, 0);  // B: Off
+			DrvL6398_6Step_UniPolar_GateCtl(pxDriver, POLE_W, _6STEP_HiZ, 0);  // C: Off
+			break;
+	}
+}
 
 
 

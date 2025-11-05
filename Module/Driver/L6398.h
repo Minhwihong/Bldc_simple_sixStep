@@ -29,7 +29,9 @@ typedef struct L6398_Bipolar_tag{
 } L6398_Bipolar_t;
 
 
-void InitDriver_Unipolar(L6398_Unipolar_t* pxDrive);
+void InitL6398_Unipolar(L6398_Unipolar_t* pxDrive);
+
+void Apply_L6398_CommutationUnipolar(void* args, uint8_t state, float pwmVal);
 
 void DrvL6398_6Step_UniPolar_GateCtl(L6398_Unipolar_t* pxDrv, u8 phase, u8 ctl, float duty);
 void DrvL6398_6Step_BiPolar_GateCtl(L6398_Bipolar_t* pxDrv, u8 phase, u8 ctl, float duty);

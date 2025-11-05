@@ -25,11 +25,19 @@ enum SIX_STEP_POS_IDX{
 	eSECTION_MAX = 8
 };
 
-typedef void (*ApplyPwrCb)(uint8_t state, float pwmVal);
+typedef void (*ApplyUniPolarCb)(void* pvDriver, uint8_t state, float pwmVal);
+typedef void (*ApplyBiPolarCb)(void* pvDriver, uint8_t state, float pwmVal);
 
 typedef struct _6StepCtlCtx_tag{
-	ApplyPwrCb cb;
-	float* pfDuty;
+	ApplyBiPolarCb fpCommTb_bipolar;
+	ApplyUniPolarCb fpCommTb_unipolar;
+	void* pvDriver;
+	float pfDuty;
+
+	IGpio_t xGpe_HallU ;
+	IGpio_t xGpe_HallV ;
+	IGpio_t xGpe_HallW ;
+
 }_6StepCtlCtx_t;
 
 
@@ -43,7 +51,7 @@ void OnEdge_Commutation_withHallSens(void* args);
 
 
 void Init_6Step_L6398_Unipolar(void* args);
-void Apply_L6398_CommutationUnipolar(uint8_t state, float pwmVal);
+void Apply_L6398_CommutationUnipolar(void* pxDriver, uint8_t state, float pwmVal);
 
 //void HallEdgeDetected(void* args);
 
