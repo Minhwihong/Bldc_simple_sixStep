@@ -47,17 +47,12 @@ void PlatformConfig_BaseTimer(TimerContainer_t* pxTmContainer, TimerCounter_t* p
 
 
 void PlatformConfig_6stepUniPolar(IPwm_t* pxPhaseUHigh, IPwm_t* pxPhaseVHigh, IPwm_t* pxPhaseWHigh,
-  IGpio_t* pxPhaseULow, IGpio_t* pxPhaseVLow, IGpio_t* pxPhaseWLow){
+  IGpio_t* pxPhaseULow, IGpio_t* pxPhaseVLow, IGpio_t* pxPhaseWLow
+){
 
 
-
-  //portSTM32_PwmChannelInit(&g_xPwmHw_6stepUnipolar_U, &htim1, TIM_CHANNEL_1, TIM1_MAX_DUTY);
   GpioPin_Def(1, pxPhaseULow, &g_xPin_6stepUnipolar_U);
-
-  //portSTM32_PwmChannelInit(&g_xPwmHw_6stepUnipolar_V, &htim1, TIM_CHANNEL_2, TIM1_MAX_DUTY);
   GpioPin_Def(1, pxPhaseVLow, &g_xPin_6stepUnipolar_V);
-
-  //portSTM32_PwmChannelInit(&g_xPwmHw_6stepUnipolar_W, &htim1, TIM_CHANNEL_3, TIM1_MAX_DUTY);
   GpioPin_Def(1, pxPhaseWLow, &g_xPin_6stepUnipolar_W);
 
   Pwm1_InitHw(pxPhaseUHigh, &g_xPwmHw_6stepUnipolar_U, 1);
