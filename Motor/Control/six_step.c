@@ -8,29 +8,15 @@
 // IGpio_t g_xGpe_HallW ;
 
 
-static float g_fDuty = 0.0f;
-
-static L6398_Unipolar_t g_xDriverUniPolar;
-static _6StepCtlCtx_t g_xCtlUniPolar;
+void Init_6Step_Unipolar(_6StepCtlCtx_t* ctx, void* pvDriver){
 
 
+	ctx->fpCommTb_unipolar = Apply_L6398_CommutationUnipolar;
+	ctx->fSetDuty = 0;
+	ctx->pvDriver = pvDriver;
 
-//static void OnEdge_Commutation_withHallSens(void* args);
-
-
-
-
-void Init_6Step_L6398_Unipolar(void* args){
-
-
-	InitL6398_Unipolar(&g_xDriverUniPolar);
-
-	g_xCtlUniPolar.fpCommTb_unipolar = Apply_L6398_CommutationUnipolar;
-	g_xCtlUniPolar.pfDuty = g_fDuty;
-	g_xCtlUniPolar.pvDriver = (void*)&g_xDriverUniPolar;
-
-	PlatformConfig_HallSens_ISR(&g_xCtlUniPolar.xGpe_HallU, &g_xCtlUniPolar.xGpe_HallV, &g_xCtlUniPolar.xGpe_HallW, 
-		OnEdge_Commutation_withHallSens, (void*)&g_xCtlUniPolar);
+	PlatformConfig_HallSens_ISR(&ctx->xGpe_HallU, &ctx->xGpe_HallV, &ctx->xGpe_HallW, 
+		OnEdge_Commutation_withHallSens, (void*)&ctx);
 }
 
 
@@ -68,14 +54,41 @@ void OnEdge_Commutation_withHallSens(void* args)
 
 
 
-	px6Step->fpCommTb_unipolar(px6Step->pvDriver, state,  px6Step->pfDuty );
+	px6Step->fpCommTb_unipolar(px6Step->pvDriver, state,  px6Step->fSetDuty );
 }
 
 
 
 
 
+void CliControl(cli_args_t *args, void* param){
 
+	_6StepCtlCtx_t* px6Step = (_6StepCtlCtx_t*)param;
+
+
+	if(args->argc >= 1 ){
+
+		if(args->isStr(0, "rpm") == 1){
+			int rpm;
+			rpm = args->getData(1);
+
+			if(0 < rpm < 9000){
+				px6Step->uiSetRpm = rpm;
+			}
+
+		}
+		else if(args->isStr(0, "duty") == 1){
+			float duty;
+
+			duty = args->getFloat(1);
+
+			if(0 < duty < 90){
+				px6Step->fSetDuty = duty;
+			}
+		}
+	}
+
+}
 
 
 

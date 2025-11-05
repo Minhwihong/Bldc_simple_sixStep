@@ -19,10 +19,10 @@ u16 g_ausAdcFilterData[ADC_MAX_CHANNEL];
 static Pwm1Ch_HwWrapper g_xPwmHw_6stepUnipolar_U = {&htim3, TIM_CHANNEL_2, 4249};
 static Gpio_HwWrapper g_xPin_6stepUnipolar_U = {GPIOA, GPIO_PIN_8};
 
-static Pwm1Ch_HwWrapper g_xPwmHw_6stepUnipolar_V = {&htim3, TIM_CHANNEL_2, 4249};
+static Pwm1Ch_HwWrapper g_xPwmHw_6stepUnipolar_V = {&htim3, TIM_CHANNEL_3, 4249};
 static Gpio_HwWrapper g_xPin_6stepUnipolar_V = {GPIOA, GPIO_PIN_9};
 
-static Pwm1Ch_HwWrapper g_xPwmHw_6stepUnipolar_W = {&htim3, TIM_CHANNEL_2, 4249};
+static Pwm1Ch_HwWrapper g_xPwmHw_6stepUnipolar_W = {&htim3, TIM_CHANNEL_4, 4249};
 static Gpio_HwWrapper g_xPin_6stepUnipolar_W = {GPIOA, GPIO_PIN_10};
 
 

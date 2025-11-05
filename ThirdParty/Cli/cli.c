@@ -46,7 +46,7 @@ typedef struct
   char   cmd_str[CLI_CMD_NAME_MAX];
   void (*cmd_func)(cli_args_t *, void*);
   void* param;
-  uint8_t IsTestOn;
+  //uint8_t IsTestOn;
 
 } cli_cmd_t;
 
@@ -577,7 +577,8 @@ uint8_t cliRunCmd(cli_t *p_cli)
 
     for (int i=0; i<p_cli->cmd_count; i++)
     {
-      if (p_cli->cmd_list[i].IsTestOn != 0 &&strcmp(p_cli->argv[0], p_cli->cmd_list[i].cmd_str) == 0 )
+      //if (p_cli->cmd_list[i].IsTestOn != 0 &&strcmp(p_cli->argv[0], p_cli->cmd_list[i].cmd_str) == 0 )
+      if (strcmp(p_cli->argv[0], p_cli->cmd_list[i].cmd_str) == 0 )
       {
          p_cli->cmd_args.argc =  p_cli->argc - 1;
          p_cli->cmd_args.argv = &p_cli->argv[1];
@@ -760,7 +761,7 @@ uint8_t cliAdd(const char *cmd_str, void (*p_func)(cli_args_t *, void*), void* p
   strcpy(p_cli->cmd_list[index].cmd_str, cmd_str);
   p_cli->cmd_list[index].cmd_func = p_func;
   p_cli->cmd_list[index].param = pParam;
-  p_cli->cmd_list[index].IsTestOn = isTestOn;
+  //p_cli->cmd_list[index].IsTestOn = isTestOn;
   //args
   
 
@@ -768,8 +769,8 @@ uint8_t cliAdd(const char *cmd_str, void (*p_func)(cli_args_t *, void*), void* p
 
   p_cli->cmd_count++;
 
-  if(isTestOn == 1)
-    g_ucDefaultCmdCnt++;
+  // if(isTestOn == 1)
+  //   g_ucDefaultCmdCnt++;
 
   return ret;
 }
@@ -780,7 +781,7 @@ uint8_t cliAdd(const char *cmd_str, void (*p_func)(cli_args_t *, void*), void* p
 
 void cliTestEnable( uint8_t ucEnable){
   for(uint8_t idx=g_ucDefaultCmdCnt; idx<cli_node.cmd_count; ++idx){
-    cli_node.cmd_list[idx].IsTestOn = ucEnable;
+    //cli_node.cmd_list[idx].IsTestOn = ucEnable;
   }
 }
 

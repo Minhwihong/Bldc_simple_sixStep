@@ -25,6 +25,8 @@
 // #include "pattern_mapping.h"
 // #include "motorCtl.h"
 #include "six_step.h"
+#include "cli.h"
+#include "L6398.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -82,7 +84,8 @@ static void MX_TIM3_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 uint16_t testPwmVal = 0;
-
+static _6StepCtlCtx_t g_xCtlUniPolar;
+static L6398_Unipolar_t g_xDriverUniPolar;
 
 // void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
@@ -161,11 +164,15 @@ int main(void)
 
   testPwmVal = 400;
 
+  cliInit((void*)0);
+  cliOpen(0, &hlpuart1);
+
 
   //ApplyCommutation_DRV832x(7, 300); // align
   HAL_Delay(200);
 
-  Init_6Step_L6398_Unipolar((void*)0);
+  InitL6398_Unipolar(&g_xDriverUniPolar);
+  Init_6Step_Unipolar(&g_xCtlUniPolar, (void*)&g_xDriverUniPolar);
 
   /* USER CODE BEGIN WHILE */
   while (1)

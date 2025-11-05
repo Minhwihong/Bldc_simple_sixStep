@@ -5,6 +5,7 @@
 #include "IF_Hal.h"
 #include "motor_term_def.h"
 #include "sensHall.h"
+#include "cli.h"
 
 
 enum e6STEP_CTL{
@@ -32,7 +33,10 @@ typedef struct _6StepCtlCtx_tag{
 	ApplyBiPolarCb fpCommTb_bipolar;
 	ApplyUniPolarCb fpCommTb_unipolar;
 	void* pvDriver;
-	float pfDuty;
+	
+	float fSetDuty;
+
+	uint32_t uiSetRpm;
 
 	IGpio_t xGpe_HallU ;
 	IGpio_t xGpe_HallV ;
@@ -50,9 +54,18 @@ void OnEdge_Commutation_withHallSens(void* args);
 
 
 
-void Init_6Step_L6398_Unipolar(void* args);
+void Init_6Step_Unipolar(_6StepCtlCtx_t* ctx, void* pvDriver);
 void Apply_L6398_CommutationUnipolar(void* pxDriver, uint8_t state, float pwmVal);
 
 //void HallEdgeDetected(void* args);
+
+
+
+void CliControl(cli_args_t *args, void* param);
+
+
+
+
+
 
 #endif

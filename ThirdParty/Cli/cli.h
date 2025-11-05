@@ -50,12 +50,12 @@ typedef struct
 
 
 
-typedef struct {
-    uint8_t bIsTestOn;
-    uint8_t bIsFactoryTest;
-    uint8_t bIsAllLog;
-    uint8_t testCmd;
-}UnitTestMain;
+// typedef struct {
+//     //uint8_t bIsTestOn;
+//     uint8_t bIsFactoryTest;
+//     uint8_t bIsAllLog;
+//     uint8_t testCmd;
+// }UnitTestMain;
 
 
 

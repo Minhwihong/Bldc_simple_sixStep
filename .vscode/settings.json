@@ -70,7 +70,9 @@
         "if_adc.h": "c",
         "l6398.h": "c",
         "if_hal.h": "c",
-        "six_step.h": "c"
+        "six_step.h": "c",
+        "boardnuclg431.h": "c",
+        "main.h": "c"
     },
     "editor.tokenColorCustomizations": {
         "textMateRules": [
