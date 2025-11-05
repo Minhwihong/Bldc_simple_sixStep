@@ -31,17 +31,8 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-enum SIX_STEP_STS{
-	BLDC_STEP_HiZ = 0,
-	BLDC_STEP_PLUS,
-	BLDC_STEP_NEG,
-};
 
-enum BLDC_POLE{
-	POLE_U = 1,
-	POLE_V= 2,
-	POLE_W= 3,
-};
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

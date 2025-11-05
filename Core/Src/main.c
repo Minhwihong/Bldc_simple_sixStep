@@ -22,8 +22,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "tiny_printf.h"
-#include "pattern_mapping.h"
-#include "motorCtl.h"
+// #include "pattern_mapping.h"
+// #include "motorCtl.h"
+#include "six_step.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -59,6 +60,8 @@ void _putchar(char character)
   // send char to console etc.
   HAL_UART_Transmit(&hlpuart1, (uint8_t*)(&character), 1, 20) ;
 }
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -81,22 +84,22 @@ static void MX_TIM3_Init(void);
 uint16_t testPwmVal = 0;
 
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+// void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
-	switch(GPIO_Pin){
-		case GPE_HALL_1_Pin:
-			//ReadHallSensors();
-			break;
+// 	switch(GPIO_Pin){
+// 		case GPE_HALL_1_Pin:
+// 			//ReadHallSensors();
+// 			break;
 
-		case GPE_HALL_2_Pin:
-			break;
+// 		case GPE_HALL_2_Pin:
+// 			break;
 
-		case GPE_HALL_3_Pin:
-			break;
+// 		case GPE_HALL_3_Pin:
+// 			break;
 
-		default:	break;
-	}
-}
+// 		default:	break;
+// 	}
+// }
 
 
 /* USER CODE END 0 */
@@ -142,9 +145,10 @@ int main(void)
 
 
   __HAL_TIM_SET_COUNTER(&htim1, 0);
-  //__HAL_TIM_SET_COUNTER(&htim3, 0);
+  __HAL_TIM_SET_COUNTER(&htim3, 0);
 
-  //Bldc_findHallPattern(&g_xBldcCtlCtx);
+
+
   /* USER CODE END 2 */
   printf("Hello Motor World!\r\n");
 
@@ -158,8 +162,10 @@ int main(void)
   testPwmVal = 400;
 
 
-  ApplyCommutation_DRV832x(7, 300); // align
+  //ApplyCommutation_DRV832x(7, 300); // align
   HAL_Delay(200);
+
+  Init_6Step_L6398_Unipolar((void*)0);
 
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -168,11 +174,6 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-	uint8_t state = ReadHallSensors();
-
-
-	//testPwmVal
-	ApplyCommutation_DRV832x(state, testPwmVal);
 
 
   }

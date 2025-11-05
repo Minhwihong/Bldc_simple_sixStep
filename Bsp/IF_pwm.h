@@ -25,22 +25,6 @@ enum eBLDC_PWM_CH{
     eBLDC_PWM_MAX
 };
 
-typedef struct PWM_LookupTb_tag{
-    u8 ucBldcChId;
-    u32 uiHwChId;
-}PWM_LookupTb_t;
-
-
-
-
-enum eBLDC_PWM_DUAL_CH{
-    ePWM_POLE_DUAL_U = 0,
-    ePWM_POLE_DUAL_V,
-    ePWM_POLE_DUAL_W,
-
-    eBLDC_PWM_DUAL_MAX
-};
-
 
 
 
@@ -51,39 +35,33 @@ typedef struct PWM_Complementary_tag{
 
 
 
-typedef struct PWM_Context_tag{
-    Pwm1Ch_HwWrapper* pxPwmSrc[eBLDC_PWM_MAX];
-   
-    u8 ucChId[eBLDC_PWM_MAX];
-    u32 uiLookupChTb[eBLDC_PWM_MAX];
-    u32 uiMaxDuty[eBLDC_PWM_MAX];
 
-}BldcPWM_Ctx_t;
-
-
-typedef struct DualPWM_Context_tag{
-    PWM2Ch_HwWrapper* pxPwmSrc[eBLDC_PWM_DUAL_MAX];
-    u8 ucChId[eBLDC_PWM_DUAL_MAX];
-
-    u32 uiLookupChTb[eBLDC_PWM_DUAL_MAX];
-    PWM_Complementary_t dualCh[eBLDC_PWM_DUAL_MAX];
-}Bldc_DualPWM_Ctx_t;
+typedef struct IPwm_tag{
+    Pwm1Ch_HwWrapper* pxPwmSrc;
+    u8 ucChId;
+}IPwm_t;
 
 
 
-void PWM_StartStop(BldcPWM_Ctx_t* pxCtx, u8 ucOnOff, u8 ucCh);
-void PWM_ChannelMatching(BldcPWM_Ctx_t* pxBldcCtx, Pwm1Ch_HwWrapper* pxHw, u8 ucBldcCh);
-
-void PWM_Generate(BldcPWM_Ctx_t* pxCtx, u32 uiDuty,u8 ucCh);
-void PWM_Generate_Complementary(BldcPWM_Ctx_t* pxCtx, u32 uiDuty, u8 ucChP, u8 ucChN);
-void PWM_GenerateMax(BldcPWM_Ctx_t* pxCtx, u8 ucCh);
 
 
-void PWMDual_Init();
-void PWMDual_StartStop(Bldc_DualPWM_Ctx_t* pxCtx, u8 ucOnOff, u8 ucCh);
-void PWMDual_Generate(Bldc_DualPWM_Ctx_t* pxCtx, u8 ucCh, u32 uiDuty);
-void PWMDual_NChannelHigh(Bldc_DualPWM_Ctx_t* pxCtx, u8 ucCh);
-void PWMDual_NChannelLow(Bldc_DualPWM_Ctx_t* pxCtx, u8 ucCh);
-void PWMDual_Complementary(Bldc_DualPWM_Ctx_t* pxCtx, PWM_Complementary_t* xCh, u8 ucMode);
+
+
+
+
+
+void Pwm1_StartStop(IPwm_t* pxPwm, u8 OnOff);
+void Pwm1_InitHw(IPwm_t* pxPwm, Pwm1Ch_HwWrapper* pxHw, u8 ucBldcCh);
+void Pwm1_Generate(IPwm_t* pxCtx, float fDuty);
+
+
+void Pwm2_StartStop(IPwm_t* pxPwm, u8 OnOff);
+void Pwm2_InitHw(IPwm_t* pxPwm, Pwm1Ch_HwWrapper* pxHw, u8 ucBldcCh);
+void Pwm2_Generate_Compl(IPwm_t* pxCtx, float fDuty);
+void Pwm2_Generate_Pos(IPwm_t* pxCtx, float fDuty);
+void Pwm2_Generate_Neg(IPwm_t* pxCtx, float fDuty);
+void Pwm2_SetLevel_Pos(IPwm_t* pxCtx, u8 lev);
+void Pwm2_SetLevel_Neg(IPwm_t* pxCtx, u8 lev);
+
 
 #endif

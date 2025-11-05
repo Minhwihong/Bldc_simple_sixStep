@@ -1,21 +1,149 @@
 #include "six_step.h"
+#include "main.h"
+#include "L6398.h"
+
+
+IGpio_t g_xGpe_HallU ;
+IGpio_t g_xGpe_HallV ;
+IGpio_t g_xGpe_HallW ;
 
 
 
-extern GpioNode_t g_xGpe_HallU ;
-extern GpioNode_t g_xGpe_HallV ;
-extern GpioNode_t g_xGpe_HallW ;
 
-static uint16_t g_usMaxDuty = 0;
+static float g_fDuty = 0.0f;
 
+static L6398_Unipolar_t g_xDriverUniPolar;
+static _6StepCtlCtx_t g_xCtlUniPolar;
+
+
+
+//static void OnEdge_Commutation_withHallSens(void* args);
+
+
+
+
+void Init_6Step_L6398_Unipolar(void* args){
+
+
+	InitDriver_Unipolar(&g_xDriverUniPolar);
+
+	g_xCtlUniPolar.cb = Apply_L6398_CommutationUnipolar;
+	g_xCtlUniPolar.pfDuty = &g_fDuty;
+
+
+	PlatformConfig_HallSens(&g_xGpe_HallU, &g_xGpe_HallU, &g_xGpe_HallU, 
+		OnEdge_Commutation_withHallSens, (void*)&g_xCtlUniPolar);
+}
+
+
+
+
+
+
+
+void OnEdge_Commutation_withHallSens(void* args)
+{
+    uint8_t state = 0;
+	uint8_t read = 0;
+	_6StepCtlCtx_t* fCtl = (_6StepCtlCtx_t*)args;
+
+	read = ReadGpio(&g_xGpe_HallU);
+	
+    if (read != 0){
+    	state |= 0x01;
+    }
+
+	read = ReadGpio(&g_xGpe_HallV);
+
+	if (read != 0){
+		state |= 0x02;
+	}
+
+
+	read = ReadGpio(&g_xGpe_HallW);
+
+	if (read != 0){
+		state |= 0x04;
+	}
+
+
+
+	fCtl->cb( state,  *(fCtl->pfDuty) );
+}
+
+
+
+
+
+void Apply_L6398_CommutationUnipolar(uint8_t state, float pwmVal)
+{
+	switch (state)
+	{
+		case 4:  // Hall: 001 -> B-PWM, C-Low
+			//DrvL6398_6Step_UniPolar_GateCtl(L6398_Unipolar_t* pxDrv, u8 phase, u8 ctl, float duty)
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_U, _6STEP_PWM_IN, (float)pwmVal);
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_V, _6STEP_HiZ, (float)0);
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_W, _6STEP_LOWSIDE_ON, (float)0);
+			break;
+
+		case 2:  // Hall: 010 -> A-PWM, C-Low  -----
+            DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_U, _6STEP_LOWSIDE_ON, 0);  // A: Low
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_V, _6STEP_PWM_IN, pwmVal); // B: PWM
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_W, _6STEP_HiZ, 0);  		// C: Off
+			break;
+
+		case 6:  // Hall: 011 -> A-PWM, B-Low
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_U, _6STEP_HiZ, 0);  		// A: Off
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_V, _6STEP_PWM_IN, pwmVal); // B: PWM
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_W, _6STEP_LOWSIDE_ON, 0);  // C: Low
+			break;
+
+		case 1:  // Hall: 100 -> C-PWM, A-Low
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_U, _6STEP_HiZ, 0);  		// A: Off
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_V, _6STEP_LOWSIDE_ON, 0);  // B: Low
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_W, _6STEP_PWM_IN, pwmVal); // C: PWM
+			break;
+
+		case 5:  // Hall: 101 -> C-PWM, B-Low
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_U, _6STEP_PWM_IN, pwmVal); // A: PWM
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_V, _6STEP_LOWSIDE_ON, 0);  // B: Low
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_W, _6STEP_HiZ, 0);  		// C: Off
+			break;
+
+		case 3:  // Hall: 110 -> B-PWM, A-Low
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_U, _6STEP_LOWSIDE_ON, 0);  // A: Low
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_V, _6STEP_HiZ, 0);  		// B: Off
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_W, _6STEP_PWM_IN, pwmVal); // C: PWM
+			break;
+
+        case 7:  // align
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar,POLE_U, _6STEP_PWM_IN, pwmVal);  
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar,POLE_V, _6STEP_LOWSIDE_ON, 0);  	
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar,POLE_W, _6STEP_LOWSIDE_ON, 0);  	
+			break;
+
+		default:  // Invalid states (0, 7)
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_U, _6STEP_HiZ, 0);  // A: Off
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_V, _6STEP_HiZ, 0);  // B: Off
+			DrvL6398_6Step_UniPolar_GateCtl(&g_xDriverUniPolar, POLE_W, _6STEP_HiZ, 0);  // C: Off
+			break;
+	}
+}
+
+
+
+
+
+
+
+
+#if 0
 uint16_t g_usMaxPowerTm = 0;
-
-
-BldcSixStep_CtlCtx_t g_xBldcCtlCtx;
-
+uint32_t g_uiOverFlowCnt = 0;
+uint32_t g_uiElectricPeriod = 0;
+float g_fElectricRPM = 0.0f;
+uint8_t g_ucMeasRpmHall = 5;
 void CalcPeriod_OverflowCnt(void* args);
-void ThreePhasePWMGen_1stSucceed_6pwm(BldcPWM_Ctx_t* pxPwmCtx, BldcPwrOut_t* pxPwrOut, uint16_t usDuty);
-
 
 
 void InitBldcMeasRPM(TimerContainer_t* pxTmContainer){
@@ -24,440 +152,6 @@ void InitBldcMeasRPM(TimerContainer_t* pxTmContainer){
 	xTmTask1 = CreateTimerTask(CalcPeriod_OverflowCnt, (void*)0, 1, HARD_TIMER_STARTED);
 	RegisterTimer(pxTmContainer, &xTmTask1);
 }
-
-
-
-
-void InitBldcPwmCtl(BldcSixStep_CtlCtx_t* pxBldcCtx, BldcPWM_Ctx_t* pxPwmCtx){
-
-	PWM_StartStop(pxPwmCtx, 1, ePWM_POLE_U_POS);
-	PWM_StartStop(pxPwmCtx, 1, ePWM_POLE_U_NEG);
-
-	PWM_StartStop(pxPwmCtx, 1, ePWM_POLE_V_POS);
-	PWM_StartStop(pxPwmCtx, 1, ePWM_POLE_V_NEG);
-
-	PWM_StartStop(pxPwmCtx, 1, ePWM_POLE_W_POS);
-	PWM_StartStop(pxPwmCtx, 1, ePWM_POLE_W_NEG);
-
-	g_usMaxDuty = pxPwmCtx->uiMaxDuty[ePWM_POLE_U_POS];
-
-
-	pxBldcCtx->pxPwmCtx = pxPwmCtx;
-}
-
-
-
-
-
-
-uint8_t Bldc_HallPattern_Set(BldcSixStep_CtlCtx_t* pxCtx, BldcHallSect_t predefinePatt[]){
-
-	for(uint8_t hallCode=eSECTION_EXCEP1; hallCode<eSECTION_MAX; ++hallCode){
-
-		pxCtx->xHallMatchTb[hallCode].ucSection = predefinePatt[hallCode].ucSection;
-		pxCtx->xHallMatchTb[hallCode].ucHallCode =  predefinePatt[hallCode].ucHallCode;
-	}
-
-	return 0;
-}
-
-
-uint8_t Bldc_findHallPattern(BldcSixStep_CtlCtx_t* pxCtx){
-
-	BldcPwrOut_t xPhasePwrOut;
-	uint8_t ucHall_u = 0, ucHall_v = 0, ucHall_w = 0;
-	uint8_t ucHallCombi = 0;
-
-	pxCtx->xHallTb[0]._U = 0;
-	pxCtx->xHallTb[0]._V = 0;
-	pxCtx->xHallTb[0]._W = 0;
-	pxCtx->xHallMatchTb[0].ucSection = 0;
-	pxCtx->xHallMatchTb[0].ucHallCode = 0;
-
-	pxCtx->xHallTb[eSECTION_EXCEP2]._U = 1;
-	pxCtx->xHallTb[eSECTION_EXCEP2]._V = 1;
-	pxCtx->xHallTb[eSECTION_EXCEP2]._W = 1;
-	pxCtx->xHallMatchTb[eSECTION_EXCEP2].ucSection = 0;
-	pxCtx->xHallMatchTb[eSECTION_EXCEP2].ucHallCode = (1) + (1 << 1) + (1 << 2);
-
-
-	for(uint8_t idx=eSECTION_1; idx<eSECTION_EXCEP2; ++idx){
-
-		xPhasePwrOut = HallLocationFind_PwrPattern(idx);
-
-		//PhaseFind, PhaseCtl
-
-		//ThreePhasePWMGen_1stSucceed(pxCtx->pxPwmCtx, &xPhasePwrOut, 600);
-		ThreePhasePWMGen_1stSucceed_6pwm(pxCtx->pxPwmCtx, &xPhasePwrOut, 1600);
-
-		HAL_Delay(1000);
-
-
-		ucHall_u = ReadGpio(pxCtx->xHallPin.pxU);
-		ucHall_v = ReadGpio(pxCtx->xHallPin.pxV);
-		ucHall_w = ReadGpio(pxCtx->xHallPin.pxW);
-
-		pxCtx->xHallTb[idx]._U = ucHall_u;
-		pxCtx->xHallTb[idx]._V = ucHall_v;
-		pxCtx->xHallTb[idx]._W = ucHall_w;
-
-		ucHallCombi = (ucHall_u) + (ucHall_v << 1) + (ucHall_w << 2);
-		pxCtx->ucHallCombi = ucHallCombi;
-
-		pxCtx->xHallMatchTb[ucHallCombi].ucSection = idx;
-		pxCtx->xHallMatchTb[ucHallCombi].ucHallCode =  (ucHall_u) + (ucHall_v << 1) + (ucHall_w << 2);
-
-	}
-
-	xPhasePwrOut = HallLocationFind_PwrPattern(0);
-	//ThreePhasePWMGen_1stSucceed(pxCtx->pxPwmCtx, &xPhasePwrOut, 0);
-	ThreePhasePWMGen_1stSucceed_6pwm(pxCtx->pxPwmCtx, &xPhasePwrOut, 0);
-
-
-	for(uint8_t idx=eSECTION_1; idx<eSECTION_EXCEP2; ++idx){
-		if(pxCtx->xHallMatchTb[ucHallCombi].ucSection == 0){
-			// Hall Location find fail..
-		}
-	}
-
-	return 0;
-}
-
-void Bldc_CtlMain(BldcSixStep_CtlCtx_t* pxCtx, uint32_t uiDuty){
-
-	uint8_t ucHall_u = 0, ucHall_v = 0, ucHall_w = 0;
-	uint8_t ucHallCombi = 0;
-	uint8_t ucSection = 0;
-
-	static u32 duty_pre = 0;
-	static u16 usDutyMax = 4000;
-
-
-	ucHall_u = ReadGpio(pxCtx->xHallPin.pxU);
-	ucHall_v = ReadGpio(pxCtx->xHallPin.pxV);
-	ucHall_w = ReadGpio(pxCtx->xHallPin.pxW);
-
-	ucHallCombi = (ucHall_u) + (ucHall_v << 1) + (ucHall_w << 2);
-	pxCtx->ucHallCombi = ucHallCombi;
-
-	ucSection = pxCtx->xHallMatchTb[ucHallCombi].ucSection;
-
-	if(pxCtx->ucDir == 0){
-		pxCtx->xPwrOutPattern = Bldc_Ctl_PhaseCtl_CW(ucSection);
-	}
-	else {
-		pxCtx->xPwrOutPattern = Bldc_Ctl_PhaseCtl_CCW(ucSection);
-	}
-
-	if(duty_pre == 0 && pxCtx->usDuty != 0){
-		g_usMaxPowerTm = 500;
-	}
-
-	duty_pre = pxCtx->usDuty;
-
-	ThreePhasePWMGen_1stSucceed_6pwm(pxCtx->pxPwmCtx, &pxCtx->xPwrOutPattern, pxCtx->usDuty);
-	//ThreePhasePWMGen_1stSucceed(pxCtx->pxPwmCtx, &pxCtx->xPwrOutPattern, pxCtx->usDuty);
-
-}
-
-
-
-
-BldcPwrOut_t Bldc_Ctl_PhaseCtl_CW(uint8_t ucCurrSection){
-
-	BldcPwrOut_t pwrOut;
-
-	switch(ucCurrSection){
-
-		case 1:	// Section #1
-			pwrOut.U_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_PLUS;
-			pwrOut.W_phase = BLDC_STEP_HiZ;
-			break;
-
-		case 2:	// Section #2
-			pwrOut.U_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_HiZ;
-			pwrOut.W_phase = BLDC_STEP_PLUS;
-			break;
-
-		case 3:	// Section #3
-			pwrOut.U_phase = BLDC_STEP_HiZ;
-			pwrOut.V_phase = BLDC_STEP_NEG;
-			pwrOut.W_phase = BLDC_STEP_PLUS;
-			break;
-
-		case 4:	// Section #4
-			pwrOut.U_phase = BLDC_STEP_PLUS;
-			pwrOut.V_phase = BLDC_STEP_NEG;
-			pwrOut.W_phase = BLDC_STEP_HiZ;
-			break;
-
-		case 5:	// Section #5
-			pwrOut.U_phase = BLDC_STEP_PLUS;
-			pwrOut.V_phase = BLDC_STEP_HiZ;
-			pwrOut.W_phase = BLDC_STEP_NEG;
-			break;
-
-		case 6:	// Section #6
-			pwrOut.U_phase = BLDC_STEP_HiZ;
-			pwrOut.V_phase = BLDC_STEP_PLUS;
-			pwrOut.W_phase = BLDC_STEP_NEG;
-			break;
-
-
-		default:
-			pwrOut.U_phase = BLDC_STEP_HiZ;
-			pwrOut.V_phase = BLDC_STEP_HiZ;
-			pwrOut.W_phase = BLDC_STEP_HiZ;
-			break;
-		}
-
-	return pwrOut;
-}
-
-
-
-
-
-BldcPwrOut_t Bldc_Ctl_PhaseCtl_CCW(uint8_t ucCurrSection){
-
-	BldcPwrOut_t pwrOut;
-
-	switch(ucCurrSection){
-
-		case 1:	// Section #1
-			pwrOut.U_phase = BLDC_STEP_PLUS;		// 0
-			pwrOut.V_phase = BLDC_STEP_NEG;		// -
-			pwrOut.W_phase = BLDC_STEP_HiZ;	// +
-			break;
-
-		case 2:	// Section #2
-			pwrOut.U_phase = BLDC_STEP_PLUS;	// +
-			pwrOut.V_phase = BLDC_STEP_HiZ;		// 0
-			pwrOut.W_phase = BLDC_STEP_NEG;		// -
-			break;
-
-		case 3:	// Section #3
-			pwrOut.U_phase = BLDC_STEP_HiZ;
-			pwrOut.V_phase = BLDC_STEP_PLUS;
-			pwrOut.W_phase = BLDC_STEP_NEG;
-			break;
-
-		case 4:	// Section #4
-			pwrOut.U_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_PLUS;
-			pwrOut.W_phase = BLDC_STEP_HiZ;
-			break;
-
-		case 5:	// Section #5
-			pwrOut.U_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_HiZ;
-			pwrOut.W_phase = BLDC_STEP_PLUS;
-			break;
-
-		case 6:	// Section #6
-			pwrOut.U_phase = BLDC_STEP_HiZ;
-			pwrOut.V_phase = BLDC_STEP_NEG;
-			pwrOut.W_phase = BLDC_STEP_PLUS;
-			break;
-
-
-		default:
-			pwrOut.U_phase = BLDC_STEP_HiZ;
-			pwrOut.V_phase = BLDC_STEP_HiZ;
-			pwrOut.W_phase = BLDC_STEP_HiZ;
-			break;
-		}
-
-	return pwrOut;
-}
-
-
-
-
-
-
-
-BldcPwrOut_t HallLocationFind_PwrPattern(uint8_t step){
-
-	BldcPwrOut_t pwrOut;
-
-	switch(step){
-
-		case 1:	// Section #1
-			pwrOut.U_phase = BLDC_STEP_PLUS;
-			pwrOut.V_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_NEG;
-			break;
-
-
-		case 2:	// Section #2
-			pwrOut.U_phase = BLDC_STEP_PLUS;
-			pwrOut.V_phase = BLDC_STEP_PLUS;
-			pwrOut.W_phase = BLDC_STEP_NEG;
-			break;
-
-		case 3:	// Section #3
-			pwrOut.U_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_PLUS;
-			pwrOut.W_phase = BLDC_STEP_NEG;
-			break;
-
-		case 4:	// Section #4
-			pwrOut.U_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_PLUS;
-			pwrOut.W_phase = BLDC_STEP_PLUS;
-			break;
-
-		case 5:	// Section #5
-			pwrOut.U_phase = BLDC_STEP_NEG;
-			pwrOut.V_phase = BLDC_STEP_NEG;
-			pwrOut.W_phase = BLDC_STEP_PLUS;
-			break;
-
-		case 6:	// Section #6
-			pwrOut.U_phase = BLDC_STEP_PLUS;
-			pwrOut.V_phase = BLDC_STEP_NEG;
-			pwrOut.W_phase = BLDC_STEP_PLUS;
-			break;
-
-
-		default:
-			pwrOut.U_phase = BLDC_STEP_HiZ;
-			pwrOut.V_phase = BLDC_STEP_HiZ;
-			pwrOut.W_phase = BLDC_STEP_HiZ;
-			break;
-	}
-
-	return pwrOut;
-}
-
-
-
-
-void ThreePhasePWMGen_1stSucceed(BldcPWM_Ctx_t* pxPwmCtx, BldcPwrOut_t* pxPwrOut, uint16_t usDuty){
-
-	switch(pxPwrOut->U_phase){
-			case BLDC_STEP_HiZ:
-				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_U_POS);
-				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_U_NEG);
-				break;
-			case BLDC_STEP_PLUS:
-				PWM_Generate(pxPwmCtx, usDuty, 	ePWM_POLE_U_POS);
-				PWM_Generate(pxPwmCtx, 0, 		ePWM_POLE_U_NEG);
-				break;
-			case BLDC_STEP_NEG:
-				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_U_POS);
-				PWM_GenerateMax(pxPwmCtx, ePWM_POLE_U_NEG);
-				break;
-			default:
-				break;
-		}
-
-		switch(pxPwrOut->V_phase){
-			case BLDC_STEP_HiZ:
-				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_V_POS);
-				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_V_NEG);
-				break;
-			case BLDC_STEP_PLUS:
-				PWM_Generate(pxPwmCtx, usDuty, 	ePWM_POLE_V_POS);
-				PWM_Generate(pxPwmCtx, 0, 		ePWM_POLE_V_NEG);
-				break;
-			case BLDC_STEP_NEG:
-				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_V_POS);
-				PWM_GenerateMax(pxPwmCtx, ePWM_POLE_V_NEG);
-				break;
-			default:
-				break;
-		}
-
-		switch(pxPwrOut->W_phase){
-			case BLDC_STEP_HiZ:
-				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_W_POS);
-				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_W_NEG);
-				break;
-			case BLDC_STEP_PLUS:
-				PWM_Generate(pxPwmCtx, usDuty, 	ePWM_POLE_W_POS);
-				PWM_Generate(pxPwmCtx, 0, 		ePWM_POLE_W_NEG);
-				break;
-			case BLDC_STEP_NEG:
-				PWM_Generate(pxPwmCtx, 0, ePWM_POLE_W_POS);
-				PWM_GenerateMax(pxPwmCtx, ePWM_POLE_W_NEG);
-				break;
-			default:
-				break;
-		}
-}
-
-
-
-
-
-void ThreePhasePWMGen_1stSucceed_6pwm(BldcPWM_Ctx_t* pxPwmCtx, BldcPwrOut_t* pxPwrOut, uint16_t usDuty){
-
-	switch(pxPwrOut->U_phase){
-			case BLDC_STEP_HiZ:
-				// POS : L, NEG : H
-				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_U_POS);
-				PWM_Generate(pxPwmCtx, g_usMaxDuty, ePWM_POLE_U_NEG);		// Normal High
-				break;
-			case BLDC_STEP_PLUS:
-				// POS : pwm, NEG : H
-				PWM_Generate(pxPwmCtx, g_usMaxDuty, ePWM_POLE_U_POS);
-				PWM_Generate(pxPwmCtx, usDuty, 		ePWM_POLE_U_NEG);		// Normal High
-				break;
-			case BLDC_STEP_NEG:
-				// POS : L, NEG : L
-				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_U_POS);
-				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_U_NEG);		// Normal High
-				break;
-			default:
-				break;
-		}
-
-		switch(pxPwrOut->V_phase){
-			case BLDC_STEP_HiZ:
-				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_V_POS);
-				PWM_Generate(pxPwmCtx, g_usMaxDuty, ePWM_POLE_V_NEG);		// Normal High
-				break;
-			case BLDC_STEP_PLUS:
-				PWM_Generate(pxPwmCtx, g_usMaxDuty, ePWM_POLE_V_POS);
-				PWM_Generate(pxPwmCtx, usDuty, 		ePWM_POLE_V_NEG);		// Normal High
-				break;
-			case BLDC_STEP_NEG:
-				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_V_POS);
-				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_V_NEG);		// Normal High
-				break;
-			default:
-				break;
-		}
-
-		switch(pxPwrOut->W_phase){
-			case BLDC_STEP_HiZ:
-				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_W_POS);
-				PWM_Generate(pxPwmCtx, g_usMaxDuty, ePWM_POLE_W_NEG);		// Normal High
-				break;
-			case BLDC_STEP_PLUS:
-				PWM_Generate(pxPwmCtx, g_usMaxDuty, ePWM_POLE_W_POS);
-				PWM_Generate(pxPwmCtx, usDuty, 		ePWM_POLE_W_NEG);		// Normal High
-				break;
-			case BLDC_STEP_NEG:
-				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_W_POS);
-				PWM_Generate(pxPwmCtx, 0, 			ePWM_POLE_W_NEG);		// Normal High
-				break;
-			default:
-				break;
-		}
-}
-
-
-
-uint32_t g_uiOverFlowCnt = 0;
-uint32_t g_uiElectricPeriod = 0;
-float g_fElectricRPM = 0.0f;
-uint8_t g_ucMeasRpmHall = 5;
-
 
 void CalcPeriod_OverflowCnt(void* args){
 	g_uiOverFlowCnt++;
@@ -517,14 +211,15 @@ void HallEdgeDetected(void* args){
 	uint8_t ucHall_u = 0, ucHall_v = 0, ucHall_w = 0;
 	uint8_t ucHallCombi = 0;
 
-	ucHall_u = ReadGpio(g_xBldcCtlCtx.xHallPin.pxU);
-	ucHall_v = ReadGpio(g_xBldcCtlCtx.xHallPin.pxV);
-	ucHall_w = ReadGpio(g_xBldcCtlCtx.xHallPin.pxW);
+	// ucHall_u = ReadGpio(g_xBldcCtlCtx.xHallPin.pxU);
+	// ucHall_v = ReadGpio(g_xBldcCtlCtx.xHallPin.pxV);
+	// ucHall_w = ReadGpio(g_xBldcCtlCtx.xHallPin.pxW);
 
 	ucHallCombi = (ucHall_u) + (ucHall_v << 1) + (ucHall_w << 2);
 
 	if(ucHallCombi == 5){
-		g_uiElectricPeriod = GetRotatePerPeriod(g_xBldcCtlCtx.pxTmCounter);
-		g_fElectricRPM = GetPRM_fromPeriod(g_uiElectricPeriod);
+		// g_uiElectricPeriod = GetRotatePerPeriod(g_xBldcCtlCtx.pxTmCounter);
+		// g_fElectricRPM = GetPRM_fromPeriod(g_uiElectricPeriod);
 	}
 }
+#endif

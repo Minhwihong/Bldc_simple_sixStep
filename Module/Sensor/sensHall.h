@@ -17,9 +17,9 @@ typedef struct BldcHallTb_tage{
 	uint8_t _W;
     // uint8_t ucHallCombi;
 
-    // GpioNode_t* pxU;
-	// GpioNode_t* pxV;
-	// GpioNode_t* pxW;
+    // IGpio_t* pxU;
+	// IGpio_t* pxV;
+	// IGpio_t* pxW;
 
 }BldcHallTb_t;
 

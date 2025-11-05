@@ -67,7 +67,10 @@
         "if_uart.h": "c",
         "portstm32_gpio.h": "c",
         "portstm32_adc.h": "c",
-        "if_adc.h": "c"
+        "if_adc.h": "c",
+        "l6398.h": "c",
+        "if_hal.h": "c",
+        "six_step.h": "c"
     },
     "editor.tokenColorCustomizations": {
         "textMateRules": [

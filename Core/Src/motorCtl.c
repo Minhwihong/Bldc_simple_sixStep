@@ -1,7 +1,7 @@
 #include "motorCtl.h"
 
 
-
+#if 0
 
 uint8_t ReadHallSensors(void)
 {
@@ -39,12 +39,12 @@ void SetPhase(uint8_t phase, uint8_t state, uint16_t pwmVal)
     switch (phase)
     {
         case POLE_U:  // Phase A
-            if (state == BLDC_STEP_HiZ) {
+            if (state == _6STEP_HiZ) {
                 // Off - both switches off
                 __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 0);
                 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
             }
-            else if (state == BLDC_STEP_PLUS) {
+            else if (state == _6STEP_PWM_IN) {
                 // PWM High-side, Low-side OFF
                 __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, pwmVal);
                 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
@@ -57,11 +57,11 @@ void SetPhase(uint8_t phase, uint8_t state, uint16_t pwmVal)
             break;
 
         case POLE_V:  // Phase B
-            if (state == BLDC_STEP_HiZ) {
+            if (state == _6STEP_HiZ) {
                 __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);
                 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
             }
-            else if (state == BLDC_STEP_PLUS) {
+            else if (state == _6STEP_PWM_IN) {
                 __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, pwmVal);
                 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
             }
@@ -72,11 +72,11 @@ void SetPhase(uint8_t phase, uint8_t state, uint16_t pwmVal)
             break;
 
         case POLE_W:  // Phase C
-            if (state == BLDC_STEP_HiZ) {
+            if (state == _6STEP_HiZ) {
                 __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
                 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
             }
-            else if (state == BLDC_STEP_PLUS) {
+            else if (state == _6STEP_PWM_IN) {
                 __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, pwmVal);
                 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
             }
@@ -100,39 +100,39 @@ void ApplyCommutation(uint8_t state, uint16_t pwmVal)
 	switch (state)
 	{
 		case 1:  // Hall: 001 -> B-PWM, C-Low
-			SetPhase(POLE_U, BLDC_STEP_HiZ, 0);  // A: Off
-			SetPhase(POLE_V, BLDC_STEP_PLUS, pwmVal);  // B: PWM
-			SetPhase(POLE_W, BLDC_STEP_NEG, 0);  // C: Low
+			SetPhase(POLE_U, _6STEP_HiZ, 0);  // A: Off
+			SetPhase(POLE_V, _6STEP_PWM_IN, pwmVal);  // B: PWM
+			SetPhase(POLE_W, _6STEP_LOWSIDE_ON, 0);  // C: Low
 			break;
 
 		case 2:  // Hall: 010 -> A-PWM, C-Low
-			SetPhase(POLE_U, BLDC_STEP_PLUS, pwmVal);  // A: PWM
-			SetPhase(POLE_V, BLDC_STEP_HiZ, 0);  // B: Off
-			SetPhase(POLE_W, BLDC_STEP_NEG, 0);  // C: Low
+			SetPhase(POLE_U, _6STEP_PWM_IN, pwmVal);  // A: PWM
+			SetPhase(POLE_V, _6STEP_HiZ, 0);  // B: Off
+			SetPhase(POLE_W, _6STEP_LOWSIDE_ON, 0);  // C: Low
 			break;
 
 		case 3:  // Hall: 011 -> A-PWM, B-Low
-			SetPhase(POLE_U, BLDC_STEP_PLUS, pwmVal);  // A: PWM
-			SetPhase(POLE_V, BLDC_STEP_NEG, 0);  // B: Low
-			SetPhase(POLE_W, BLDC_STEP_HiZ, 0);  // C: Off
+			SetPhase(POLE_U, _6STEP_PWM_IN, pwmVal);  // A: PWM
+			SetPhase(POLE_V, _6STEP_LOWSIDE_ON, 0);  // B: Low
+			SetPhase(POLE_W, _6STEP_HiZ, 0);  // C: Off
 			break;
 
 		case 4:  // Hall: 100 -> C-PWM, A-Low
-			SetPhase(POLE_U, BLDC_STEP_NEG, 0);  // A: Low
-			SetPhase(POLE_V, BLDC_STEP_HiZ, 0);  // B: Off
-			SetPhase(POLE_W, BLDC_STEP_PLUS, pwmVal);  // C: PWM
+			SetPhase(POLE_U, _6STEP_LOWSIDE_ON, 0);  // A: Low
+			SetPhase(POLE_V, _6STEP_HiZ, 0);  // B: Off
+			SetPhase(POLE_W, _6STEP_PWM_IN, pwmVal);  // C: PWM
 			break;
 
 		case 5:  // Hall: 101 -> C-PWM, B-Low
-			SetPhase(POLE_U, BLDC_STEP_HiZ, 0);  // A: Off
-			SetPhase(POLE_V, BLDC_STEP_NEG, 0);  // B: Low
-			SetPhase(POLE_W, BLDC_STEP_PLUS, pwmVal);  // C: PWM
+			SetPhase(POLE_U, _6STEP_HiZ, 0);  // A: Off
+			SetPhase(POLE_V, _6STEP_LOWSIDE_ON, 0);  // B: Low
+			SetPhase(POLE_W, _6STEP_PWM_IN, pwmVal);  // C: PWM
 			break;
 
 		case 6:  // Hall: 110 -> B-PWM, A-Low
-			SetPhase(POLE_U, BLDC_STEP_NEG, 0);  // A: Low
-			SetPhase(POLE_V, BLDC_STEP_PLUS, pwmVal);  // B: PWM
-			SetPhase(POLE_W, BLDC_STEP_HiZ, 0);  // C: Off
+			SetPhase(POLE_U, _6STEP_LOWSIDE_ON, 0);  // A: Low
+			SetPhase(POLE_V, _6STEP_PWM_IN, pwmVal);  // B: PWM
+			SetPhase(POLE_W, _6STEP_HiZ, 0);  // C: Off
 			break;
 
 		default:  // Invalid states (0, 7)
@@ -149,15 +149,15 @@ void ApplyCommutation2(uint8_t state, uint16_t pwmVal)
 	switch (state)
 	{
 		case 1:  // Hall: 001 -> B-PWM, C-Low
-			SetPhase(POLE_U, BLDC_STEP_HiZ, 0);  // A: Off
-			SetPhase(POLE_V, BLDC_STEP_PLUS, pwmVal);  // B: PWM
-			SetPhase(POLE_W, BLDC_STEP_NEG, 0);  // C: Low
+			SetPhase(POLE_U, _6STEP_HiZ, 0);  // A: Off
+			SetPhase(POLE_V, _6STEP_PWM_IN, pwmVal);  // B: PWM
+			SetPhase(POLE_W, _6STEP_LOWSIDE_ON, 0);  // C: Low
 			break;
 
 		case 2:  // Hall: 010 -> A-PWM, C-Low  -----
-            SetPhase(POLE_U, BLDC_STEP_PLUS, pwmVal);  // A: PWM
-			SetPhase(POLE_V, BLDC_STEP_NEG, 0);  // B: Low
-			SetPhase(POLE_W, BLDC_STEP_HiZ, 0);  // C: Off
+            SetPhase(POLE_U, _6STEP_PWM_IN, pwmVal);  // A: PWM
+			SetPhase(POLE_V, _6STEP_LOWSIDE_ON, 0);  // B: Low
+			SetPhase(POLE_W, _6STEP_HiZ, 0);  // C: Off
 			break;
 
 		case 3:  // Hall: 011 -> A-PWM, B-Low
@@ -165,21 +165,21 @@ void ApplyCommutation2(uint8_t state, uint16_t pwmVal)
 			break;
 
 		case 4:  // Hall: 100 -> C-PWM, A-Low
-			SetPhase(POLE_U, BLDC_STEP_HiZ, 0);  // A: Off
-			SetPhase(POLE_V, BLDC_STEP_NEG, 0);  // B: Low
-			SetPhase(POLE_W, BLDC_STEP_PLUS, pwmVal);  // C: PWM
+			SetPhase(POLE_U, _6STEP_HiZ, 0);  // A: Off
+			SetPhase(POLE_V, _6STEP_LOWSIDE_ON, 0);  // B: Low
+			SetPhase(POLE_W, _6STEP_PWM_IN, pwmVal);  // C: PWM
 			break;
 
 		case 5:  // Hall: 101 -> C-PWM, B-Low
-			SetPhase(POLE_U, BLDC_STEP_NEG, 0);  // A: Low
-			SetPhase(POLE_V, BLDC_STEP_PLUS, pwmVal);  // B: PWM
-			SetPhase(POLE_W, BLDC_STEP_HiZ, 0);  // C: Off
+			SetPhase(POLE_U, _6STEP_LOWSIDE_ON, 0);  // A: Low
+			SetPhase(POLE_V, _6STEP_PWM_IN, pwmVal);  // B: PWM
+			SetPhase(POLE_W, _6STEP_HiZ, 0);  // C: Off
 			break;
 
 		case 6:  // Hall: 110 -> B-PWM, A-Low
-			SetPhase(POLE_U, BLDC_STEP_PLUS, pwmVal);  // A: PWM
-			SetPhase(POLE_V, BLDC_STEP_HiZ, 0);  // B: Off
-			SetPhase(POLE_W, BLDC_STEP_NEG, 0);  // C: Low
+			SetPhase(POLE_U, _6STEP_PWM_IN, pwmVal);  // A: PWM
+			SetPhase(POLE_V, _6STEP_HiZ, 0);  // B: Off
+			SetPhase(POLE_W, _6STEP_LOWSIDE_ON, 0);  // C: Low
 			break;
 
 		default:  // Invalid states (0, 7)
@@ -197,45 +197,45 @@ void ApplyCommutation_DRV832x(uint8_t state, uint16_t pwmVal)
 	switch (state)
 	{
 		case 4:  // Hall: 001 -> B-PWM, C-Low
-			SetPhase(POLE_U, BLDC_STEP_PLUS, pwmVal);  // A: PWM
-			SetPhase(POLE_V, BLDC_STEP_HiZ, 0);  // B: Off
-			SetPhase(POLE_W, BLDC_STEP_NEG, 0);  // C: Low
+			SetPhase(POLE_U, _6STEP_PWM_IN, pwmVal);  	// A: PWM
+			SetPhase(POLE_V, _6STEP_HiZ, 0);  		// B: Off
+			SetPhase(POLE_W, _6STEP_LOWSIDE_ON, 0);  		// C: Low
 			break;
 
 		case 2:  // Hall: 010 -> A-PWM, C-Low  -----
-            SetPhase(POLE_U, BLDC_STEP_NEG, 0);  // A: Low
-			SetPhase(POLE_V, BLDC_STEP_PLUS, pwmVal);  // B: PWM
-			SetPhase(POLE_W, BLDC_STEP_HiZ, 0);  // C: Off
+            SetPhase(POLE_U, _6STEP_LOWSIDE_ON, 0);  		// A: Low
+			SetPhase(POLE_V, _6STEP_PWM_IN, pwmVal);  	// B: PWM
+			SetPhase(POLE_W, _6STEP_HiZ, 0);  		// C: Off
 			break;
 
 		case 6:  // Hall: 011 -> A-PWM, B-Low
-			SetPhase(POLE_U, BLDC_STEP_HiZ, 0);  // A: Off
-			SetPhase(POLE_V, BLDC_STEP_PLUS, pwmVal);  // B: PWM
-			SetPhase(POLE_W, BLDC_STEP_NEG, 0);  // C: Low
+			SetPhase(POLE_U, _6STEP_HiZ, 0);  		// A: Off
+			SetPhase(POLE_V, _6STEP_PWM_IN, pwmVal);  	// B: PWM
+			SetPhase(POLE_W, _6STEP_LOWSIDE_ON, 0);  		// C: Low
 			break;
 
 		case 1:  // Hall: 100 -> C-PWM, A-Low
-			SetPhase(POLE_U, BLDC_STEP_HiZ, 0);  // A: Off
-			SetPhase(POLE_V, BLDC_STEP_NEG, 0);  // B: Low
-			SetPhase(POLE_W, BLDC_STEP_PLUS, pwmVal);  // C: PWM
+			SetPhase(POLE_U, _6STEP_HiZ, 0);  		// A: Off
+			SetPhase(POLE_V, _6STEP_LOWSIDE_ON, 0);  		// B: Low
+			SetPhase(POLE_W, _6STEP_PWM_IN, pwmVal);  	// C: PWM
 			break;
 
 		case 5:  // Hall: 101 -> C-PWM, B-Low
-			SetPhase(POLE_U, BLDC_STEP_PLUS, pwmVal);  // A: PWM
-			SetPhase(POLE_V, BLDC_STEP_NEG, 0);  // B: Low
-			SetPhase(POLE_W, BLDC_STEP_HiZ, 0);  // C: Off
+			SetPhase(POLE_U, _6STEP_PWM_IN, pwmVal);  	// A: PWM
+			SetPhase(POLE_V, _6STEP_LOWSIDE_ON, 0);  		// B: Low
+			SetPhase(POLE_W, _6STEP_HiZ, 0);  		// C: Off
 			break;
 
 		case 3:  // Hall: 110 -> B-PWM, A-Low
-			SetPhase(POLE_U, BLDC_STEP_NEG, 0);  // A: Low
-			SetPhase(POLE_V, BLDC_STEP_HiZ, 0);  // B: Off
-			SetPhase(POLE_W, BLDC_STEP_PLUS, pwmVal);  // C: PWM
+			SetPhase(POLE_U, _6STEP_LOWSIDE_ON, 0);  		// A: Low
+			SetPhase(POLE_V, _6STEP_HiZ, 0);  		// B: Off
+			SetPhase(POLE_W, _6STEP_PWM_IN, pwmVal);  	// C: PWM
 			break;
 
         case 7:  // align
-			SetPhase(POLE_U, BLDC_STEP_PLUS, pwmVal);  // A: PWM
-			SetPhase(POLE_V, BLDC_STEP_NEG, 0);  // B: Off
-			SetPhase(POLE_W, BLDC_STEP_NEG, 0);  // C: Low
+			SetPhase(POLE_U, _6STEP_PWM_IN, pwmVal);  	// A: PWM
+			SetPhase(POLE_V, _6STEP_LOWSIDE_ON, 0);  		// B: Off
+			SetPhase(POLE_W, _6STEP_LOWSIDE_ON, 0);  		// C: Low
 			break;
 
 		default:  // Invalid states (0, 7)
@@ -245,3 +245,5 @@ void ApplyCommutation_DRV832x(uint8_t state, uint16_t pwmVal)
 			break;
 	}
 }
+#endif
+

@@ -55,7 +55,7 @@ void BSPConfig_TimPwm(BldcPWM_Ctx_t* pxPwmCtx,  TimerContainer_t* pxTmContainer,
 }
 
 
-void BSPConfig_HallSens(HallSensePin_t* _pxHallPin, GpioNode_t* pxHallU, GpioNode_t* pxHallV, GpioNode_t* pxHallW, EdgeCallback cb){
+void BSPConfig_HallSens(HallSensePin_t* _pxHallPin, IGpio_t* pxHallU, IGpio_t* pxHallV, IGpio_t* pxHallW, EdgeCallback cb){
 
   static Gpio_HwWrapper portHw_HallU = {GPIOA, GPE3_BLDC_HU_Pin };
   static Gpio_HwWrapper portHw_HallV = {GPIOA, GPE4_BLDC_HV_Pin };

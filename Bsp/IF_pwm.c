@@ -1,64 +1,64 @@
 #include "IF_pwm.h"
 
 
-void PWM_StartStop(BldcPWM_Ctx_t* pxCtx, u8 ucOnOff, u8 ucCh){
 
-    portSTM32_PWM_StartStop(pxCtx->pxPwmSrc[ucCh], ucOnOff);
+void Pwm1_StartStop(IPwm_t* pxPwm, u8 OnOff){
+
+    portSTM32_PWM_StartStop(pxPwm->pxPwmSrc, OnOff);
 }
 
 
+void Pwm1_InitHw(IPwm_t* pxPwm, Pwm1Ch_HwWrapper* pxHw, u8 ucChId){
 
-void PWM_ChannelMatching(BldcPWM_Ctx_t* pxBldcCtx, Pwm1Ch_HwWrapper* pxHw, u8 ucBldcCh){
-
-    pxBldcCtx->pxPwmSrc[ucBldcCh] = pxHw;
-    pxBldcCtx->ucChId[ucBldcCh] = ucBldcCh;
-    pxBldcCtx->uiMaxDuty[ucBldcCh] = pxHw->uiMaxDuty;
-    //pxBldcCtx->ucChId = 
+    pxPwm->pxPwmSrc = pxHw;
+    pxPwm->ucChId = ucChId;
 }
 
 
-void PWM_Generate(BldcPWM_Ctx_t* pxCtx, u32 uiDuty, u8 ucCh){
+void Pwm1_Generate(IPwm_t* pxPwm, float fDuty){
 
-    portSTM32_PWM_Generate(pxCtx->pxPwmSrc[ucCh] , uiDuty);
-}
+    Pwm1Ch_HwWrapper* pxHw = pxPwm->pxPwmSrc;
+    float inDuty = (float)(pxHw->uiMaxDuty * (fDuty / 100.0f));
 
-
-void PWM_GenerateMax(BldcPWM_Ctx_t* pxCtx, u8 ucCh){
-
-    portSTM32_PWM_Generate(pxCtx->pxPwmSrc[ucCh] , pxCtx->pxPwmSrc[ucCh]->uiMaxDuty);
-
+    portSTM32_PWM_Generate(pxPwm->pxPwmSrc, (u32)inDuty);
 }
 
 
 
 
 
-void PWMDual_Init(){
+
+void Pwm2_StartStop(IPwm_t* pxPwm, u8 OnOff){
 
 
 }
 
-void PWMDual_StartStop(Bldc_DualPWM_Ctx_t* pxCtx, u8 ucOnOff, u8 ucCh){
+void Pwm2_InitHw(IPwm_t* pxPwm, Pwm1Ch_HwWrapper* pxHw, u8 ucBldcCh){
 
-    portSTM32_PWMDual_StartStop(pxCtx->pxPwmSrc[ucCh], ucOnOff);
+
 }
 
-void PWMDual_Generate(Bldc_DualPWM_Ctx_t* pxCtx, u8 ucCh, u32 uiDuty){
+void Pwm2_Generate_Compl(IPwm_t* pxCtx, float fDuty){
 
-    portSTM32_PWMDual_Generate(pxCtx->pxPwmSrc[ucCh], uiDuty);
+
 }
 
-void PWMDual_NChannelHigh(Bldc_DualPWM_Ctx_t* pxCtx, u8 ucCh ){
+void Pwm2_Generate_Pos(IPwm_t* pxCtx, float fDuty){
 
-    portSTM32_PWMDual_NChannelHigh(pxCtx->pxPwmSrc[ucCh]);
+
 }
 
-void PWMDual_NChannelLow(Bldc_DualPWM_Ctx_t* pxCtx, u8 ucCh){
+void Pwm2_Generate_Neg(IPwm_t* pxCtx, float fDuty){
 
-    portSTM32_PWMDual_NChannelLow(pxCtx->pxPwmSrc[ucCh]);
+
 }
 
-void PWMDual_Complementary(Bldc_DualPWM_Ctx_t* pxCtx, PWM_Complementary_t* xCh, u8 ucMode){
+void Pwm2_SetLevel_Pos(IPwm_t* pxCtx, u8 lev){
+
+
+}
+
+void Pwm2_SetLevel_Neg(IPwm_t* pxCtx, u8 lev){
 
 
 }

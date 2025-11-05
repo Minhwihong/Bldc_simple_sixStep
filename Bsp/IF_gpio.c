@@ -1,9 +1,39 @@
 #include "IF_gpio.h"
 
+static IGpio_t* axEdgeIsrPins[10] = {NULL,};
+static uint8_t ucEdgeIsrPinCnt = 0;
 
+
+//void GpioPin_Def(u16 _usId, u8 _ucMode, u8 _ucUseFilter, IGpio_t* pxPinNode, Gpio_HwWrapper* _pxPin)
+void GpioPin_Def(u16 _usId, IGpio_t* pxPinNode, Gpio_HwWrapper* _pxPin){
+
+    Gpio_HwWrapper* pxPin = _pxPin;
+
+
+    pxPinNode->pxGpioPin = (void*)pxPin;
+    pxPinNode->usId = _usId;
+    //pxPinNode->ucMode = _ucMode;
+    //pxPinNode->ucUseFilter = _ucUseFilter;
+    
+
+    pxPinNode->ucValue = 0;
+    //pxPinNode->ucFilter = 0;
+    //pxPinNode->m_pstNext = NULL;
+}
+
+
+void GpioIsr_RegisterCallback(IGpio_t* pxPinNode, EdgeCallback fpCb, void* _args){
+
+    pxPinNode->fpEdgeCb = fpCb;
+    pxPinNode->vxCbArgs = _args;
+
+    axEdgeIsrPins[ucEdgeIsrPinCnt] = pxPinNode;
+    ucEdgeIsrPinCnt++;
+}
+
+
+#if 0
 GpioPinList_Header_t g_stGpioDriverHeader;
-
-
 
 
 void InitGpioList(TimerContainer_t* timSrc) {
@@ -19,36 +49,9 @@ void InitGpioList(TimerContainer_t* timSrc) {
 }
 
 
-void GpioPin_Def(u16 _usId, u8 _ucMode, u8 _ucUseFilter, GpioNode_t* pxPinNode, Gpio_HwWrapper* _pxPin){
-
-    Gpio_HwWrapper* pxPin = _pxPin;
-
-
-    pxPinNode->pxGpioPin = (void*)pxPin;
-    pxPinNode->usId = _usId;
-    pxPinNode->ucMode = _ucMode;
-    pxPinNode->ucUseFilter = _ucUseFilter;
-    
-
-    pxPinNode->ucValue = 0;
-    pxPinNode->ucFilter = 0;
-    pxPinNode->m_pstNext = NULL;
-}
-
-
-void GpioIsr_RegisterCallback(GpioNode_t* pxPinNode, EdgeCallback fpCb, void* _args){
-
-    if(pxPinNode->ucMode == GPIO_PIN_EDGE){
-        pxPinNode->fpEdgeCb = fpCb;
-        pxPinNode->vxCbArgs = _args;
-    }
-}
-
-
-
-GpioNode_t *CheckDuplicate_N_makeList(GpioNode_t* pxNode)
+IGpio_t *CheckDuplicate_N_makeList(IGpio_t* pxNode)
 {
-	GpioNode_t *l_pstCurNode = NULL;
+	IGpio_t *l_pstCurNode = NULL;
 
     if(g_stGpioDriverHeader.pxListHead == NULL){
 
@@ -82,12 +85,11 @@ GpioNode_t *CheckDuplicate_N_makeList(GpioNode_t* pxNode)
 
 
 
-
 void DigitalFilterCallback(void *l_pParam)
 {
 	int i;
 	uint8_t l_ucDiTemp;
-	GpioNode_t *l_pstCurNode;
+	IGpio_t *l_pstCurNode;
 
 
 	l_pstCurNode = g_stGpioDriverHeader.pxListHead;
@@ -121,22 +123,22 @@ void DigitalFilterCallback(void *l_pParam)
 		l_pstCurNode = l_pstCurNode->m_pstNext;
 	}
 }
+#endif
 
 
-
-uint8_t ReadGpio(GpioNode_t *pxGpioNode)
+uint8_t ReadGpio(IGpio_t *pxGpioNode)
 {
 	return portHw_readPin(pxGpioNode->pxGpioPin);
 }
 
-void WriteGpio(GpioNode_t *pxGpioNode, u8 l_ucPinState)
+void WriteGpio(IGpio_t *pxGpioNode, u8 l_ucPinState)
 {
 	pxGpioNode->ucValue = l_ucPinState;
 
     portHw_writePin(pxGpioNode->pxGpioPin, pxGpioNode->ucValue);
 }
 
-void ToggleGpio(GpioNode_t *pxGpioNode)
+void ToggleGpio(IGpio_t *pxGpioNode)
 {
     portHw_togglePin(pxGpioNode->pxGpioPin);
 
@@ -145,21 +147,17 @@ void ToggleGpio(GpioNode_t *pxGpioNode)
 
 void OnGpio_EdgeIsr_Callback(u16 _usPin){
 
-    GpioNode_t *l_pstCurNode;
+
+
+    //axEdgeIsrPins
+    for(uint8_t idx=0; axEdgeIsrPins[idx] != NULL; ++idx){
+        Gpio_HwWrapper* pxPin = axEdgeIsrPins[idx]->pxGpioPin;
+
+        if(axEdgeIsrPins[idx]->fpEdgeCb != NULL && pxPin->usPin == _usPin){
+            axEdgeIsrPins[idx]->fpEdgeCb(axEdgeIsrPins[idx]->vxCbArgs);
+        }
+    }
     
 
-	l_pstCurNode = g_stGpioDriverHeader.pxListHead;
 
-    for(u16 i= 0; i<g_stGpioDriverHeader.usTotalNrOfGpio ; i++ ){
-
-        Gpio_HwWrapper* pxPin = l_pstCurNode->pxGpioPin;
-
-        if(pxPin->usPin == _usPin && l_pstCurNode->ucMode == GPIO_PIN_EDGE && l_pstCurNode->fpEdgeCb != NULL ) {
-
-            l_pstCurNode->fpEdgeCb(l_pstCurNode->vxCbArgs);
-        }
-
-        l_pstCurNode = l_pstCurNode->m_pstNext;
-
-    }
 }
