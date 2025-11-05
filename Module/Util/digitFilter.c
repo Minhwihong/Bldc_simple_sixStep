@@ -85,16 +85,16 @@ int32_t MedianFilter(MedianFilter_t *l_pstVar, int32_t l_iNewValue)
 
 	l_usCenterIndex = l_pstVar->m_BuffCount/2;
 
-	if(l_pstVar->m_Buff != 0 )
-	{
-		l_pstVar->m_Buff[ l_pstVar->m_BuffIndex ] = l_iNewValue;
-		memcpy((void*)l_pstVar->m_BuffCopy, (void*)l_pstVar->m_Buff, l_pstVar->m_BuffCount*sizeof(int32_t));
-		BubbleSort(l_pstVar->m_BuffCopy, l_pstVar->m_BuffCount );
-		l_iRet = l_pstVar->m_BuffCopy[l_usCenterIndex];
-		l_pstVar->m_BuffIndex++;
-		if( l_pstVar->m_BuffIndex >= l_pstVar->m_BuffCount )
-			l_pstVar->m_BuffIndex = 0;
-	}
+	//if(l_pstVar->m_Buff != 0 )
+	//{
+	l_pstVar->m_Buff[ l_pstVar->m_BuffIndex ] = l_iNewValue;
+	memcpy((void*)l_pstVar->m_BuffCopy, (void*)l_pstVar->m_Buff, l_pstVar->m_BuffCount*sizeof(int32_t));
+	BubbleSort(l_pstVar->m_BuffCopy, l_pstVar->m_BuffCount );
+	l_iRet = l_pstVar->m_BuffCopy[l_usCenterIndex];
+	l_pstVar->m_BuffIndex++;
+	if( l_pstVar->m_BuffIndex >= l_pstVar->m_BuffCount )
+		l_pstVar->m_BuffIndex = 0;
+	//}
 
 	return l_iRet;
 }

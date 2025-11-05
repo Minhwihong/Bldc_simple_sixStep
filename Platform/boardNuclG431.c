@@ -68,7 +68,7 @@ void PlatformConfig_6stepUniPolar(IPwm_t* pxPhaseUHigh, IPwm_t* pxPhaseVHigh, IP
 
 
 
-void PlatformConfig_HallSens(IGpio_t* pxHallU, IGpio_t* pxHallV, IGpio_t* pxHallW, EdgeCallback fpCb, void* _args){
+void PlatformConfig_HallSens_ISR(IGpio_t* pxHallU, IGpio_t* pxHallV, IGpio_t* pxHallW, EdgeCallback fpCb, void* _args){
 
   GpioPin_Def(4, pxHallU, &portHw_HallU);
   GpioPin_Def(5, pxHallV, &portHw_HallV);

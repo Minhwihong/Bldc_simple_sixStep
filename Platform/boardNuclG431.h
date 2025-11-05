@@ -25,6 +25,6 @@ void PlatformConfig_BaseTimer(TimerContainer_t* pxTmContainer,TimerCounter_t* px
 void PlatformConfig_6stepUniPolar(IPwm_t* pxPhaseUHigh, IPwm_t* pxPhaseVHigh, IPwm_t* pxPhaseWHigh,
   IGpio_t* pxPhaseULow, IGpio_t* pxPhaseVLow, IGpio_t* pxPhaseWLow);
 
-void PlatformConfig_HallSens(IGpio_t* pxHallU, IGpio_t* pxHallV, IGpio_t* pxHallW, EdgeCallback fpCb, void* _args);
+void PlatformConfig_HallSens_ISR(IGpio_t* pxHallU, IGpio_t* pxHallV, IGpio_t* pxHallW, EdgeCallback fpCb, void* _args);
 void PlatformConfig_Analog(AdcModule_t* pxMod, TimerContainer_t* tmContainer);
 #endif

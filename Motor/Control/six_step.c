@@ -1,7 +1,7 @@
 #include "six_step.h"
 #include "main.h"
 #include "L6398.h"
-
+#include "boardNuclG431.h"
 
 IGpio_t g_xGpe_HallU ;
 IGpio_t g_xGpe_HallV ;
@@ -31,7 +31,7 @@ void Init_6Step_L6398_Unipolar(void* args){
 	g_xCtlUniPolar.pfDuty = &g_fDuty;
 
 
-	PlatformConfig_HallSens(&g_xGpe_HallU, &g_xGpe_HallU, &g_xGpe_HallU, 
+	PlatformConfig_HallSens_ISR(&g_xGpe_HallU, &g_xGpe_HallU, &g_xGpe_HallU, 
 		OnEdge_Commutation_withHallSens, (void*)&g_xCtlUniPolar);
 }
 
