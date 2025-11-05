@@ -81,53 +81,6 @@ static void MX_TIM3_Init(void);
 uint16_t testPwmVal = 0;
 
 
-
-#if 0
-TimerContainer_t g_xTmContainer;
-TimerCounter_t g_xTmCounter;
-
-BldcPWM_Ctx_t g_xBldcPwmCtx;
-AdcModule_t g_xAdcModule;
-
-GpioNode_t g_xGpe_HallU ;
-GpioNode_t g_xGpe_HallV ;
-GpioNode_t g_xGpe_HallW ;
-
-BldcHallSect_t g_xBCMMotorHallLoc[eSECTION_MAX] = {
-	{0, 0},		// {ucSection, ucHallCode}
-	{6, 1},		// section #6 - Hall #1
-	{2, 2},		// section #2 - Hall #2
-	{1, 3},		// section #1 - Hall #3
-	{4, 4},		// section #4 - Hall #4
-	{5, 5},		// section #5 - Hall #5
-	{3, 6},		// section #3 - Hall #6
-	{7, 7},		//
-};
-
-BldcHallSect_t g_xJK42MotorHallLoc[eSECTION_MAX] = {
-	{0, 0},		//
-	{3, 1},		// section #3 - Hall #1
-	{5, 2},		// section #5 - Hall #2
-	{4, 3},		// section #4 - Hall #3
-	{1, 4},		// section #1 - Hall #4
-	{2, 5},		// section #2 - Hall #5
-	{6, 6},		// section #6 - Hall #6
-	{7, 7},		//
-};
-
-/* ******************************
- *
- * (section #4 - Hall #3) -> (section #3 - Hall #1) -> (section #2 - Hall #5) -> (section #1 - Hall #4) -> (section #6 - Hall #6) -> (section #5 - Hall #2)
- * */
-
-static uint16_t duty1 = 0;
-static uint16_t duty2 = 0;
-static uint16_t duty3 = 0;
-static uint16_t duty4 = 0;
-static uint16_t duty5 = 0;
-static uint16_t duty6 = 0;
-#endif
-
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
 	switch(GPIO_Pin){
@@ -195,7 +148,6 @@ int main(void)
   /* USER CODE END 2 */
   printf("Hello Motor World!\r\n");
 
-  uint8_t state_pre = 0xff;
 
 
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
@@ -203,31 +155,12 @@ int main(void)
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
   /* Infinite loop */
 
-  HAL_Delay(1000);
-  printf("5\r\n");
-  HAL_Delay(1000);
-  printf("4\r\n");
-  HAL_Delay(1000);
-  printf("3\r\n");
-  HAL_Delay(1000);
-  printf("2\r\n");
-  HAL_Delay(1000);
-  printf("1\r\n");
   testPwmVal = 400;
 
-
-//  PatternFindWay2();
-//
-//  while(1);
-
-
-  uint32_t targetTick = HAL_GetTick();
-  uint8_t phase = 0;
 
   ApplyCommutation_DRV832x(7, 300); // align
   HAL_Delay(200);
 
-  testPwmVal = 400;
   /* USER CODE BEGIN WHILE */
   while (1)
   {
@@ -237,39 +170,9 @@ int main(void)
 
 	uint8_t state = ReadHallSensors();
 
-//	if(state_pre != state){
-//		printf("state : %d\r\n", state);
-//	}
 
 	//testPwmVal
 	ApplyCommutation_DRV832x(state, testPwmVal);
-
-	state_pre = state;
-
-	uint32_t currTick = HAL_GetTick();
-
-	if(currTick > targetTick+200){
-
-		targetTick = currTick;
-
-		if(phase != 0){
-			testPwmVal += 30;
-
-			if(testPwmVal >= 1500){
-				phase = 0;
-			}
-		}
-		else {
-			testPwmVal -= 30;
-
-			if(testPwmVal <= 100){
-				phase = 1;
-			}
-		}
-
-
-
-	}
 
 
   }

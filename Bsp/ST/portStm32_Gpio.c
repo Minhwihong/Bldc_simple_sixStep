@@ -34,10 +34,12 @@ void portHw_OnGpio_EdgeIsr_Callback(u16 usPin){
 }
 
 
-
+#if 0
 // Stm32 GPIO External Interrupt
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
   //portHw_OnGpio_EdgeIsr_Callback(GPIO_Pin);
   OnGpio_EdgeIsr_Callback(GPIO_Pin);
 }
+#endif
+
