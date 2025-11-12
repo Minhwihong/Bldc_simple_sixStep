@@ -18,7 +18,7 @@ void Pwm1_InitHw(IPwm_t* pxPwm, Pwm1Ch_HwWrapper* pxHw, u8 ucChId){
 void Pwm1_Generate(IPwm_t* pxPwm, float fDuty){
 
     Pwm1Ch_HwWrapper* pxHw = pxPwm->pxPwmSrc;
-    float inDuty = (float)(pxHw->uiMaxDuty * (fDuty / 100.0f));
+    float inDuty = (float)((float)pxHw->uiMaxDuty * (fDuty / 100.0f));
 
     portSTM32_PWM_Generate(pxPwm->pxPwmSrc, (u32)inDuty);
 }

@@ -37,6 +37,8 @@ typedef struct _6StepCtlCtx_tag{
 	float fSetDuty;
 
 	uint32_t uiSetRpm;
+	uint8_t ucCurrSts;
+	uint8_t ucIsIgnited;
 
 	IGpio_t xGpe_HallU ;
 	IGpio_t xGpe_HallV ;
@@ -59,7 +61,7 @@ void Apply_L6398_CommutationUnipolar(void* pxDriver, uint8_t state, float pwmVal
 
 //void HallEdgeDetected(void* args);
 
-
+void CheckHallState(void* ctx);
 
 void CliControl(cli_args_t *args, void* param);
 

@@ -12,7 +12,7 @@ IGpio_t g_xGpo_phaseW_lowside;
 void InitL6398_Unipolar(L6398_Unipolar_t* pxDrive){
 
     PlatformConfig_6stepUniPolar(&g_xPwm_phaseU_highside, &g_xPwm_phaseV_highside, &g_xPwm_phaseW_highside,
-		&g_xGpo_phaseU_lowside, &g_xGpo_phaseU_lowside, &g_xGpo_phaseU_lowside);
+		&g_xGpo_phaseU_lowside, &g_xGpo_phaseV_lowside, &g_xGpo_phaseW_lowside);
 
 
 

@@ -53,17 +53,17 @@ void portSTM32_ResetTimerCount(Tm_HwWrapper* pxTimer){
 
 
 
-// Stm32 Timer Period Elapsed Callback
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-  /* USER CODE BEGIN Callback 0 */
+ //Stm32 Timer Period Elapsed Callback
+ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+ {
+   /* USER CODE BEGIN Callback 0 */
 
-  /* USER CODE END Callback 0 */
+   /* USER CODE END Callback 0 */
 
-  /* USER CODE BEGIN Callback 1 */
-  if( htim->Instance == TIM6 ) {
+   /* USER CODE BEGIN Callback 1 */
+   if( htim->Instance == TIM6 ) {
 
-    HWTimerCallback(g_pxTmContainerMain);
-  }
-  /* USER CODE END Callback 1 */
-}
+     HWTimerCallback(g_pxTmContainerMain);
+   }
+   /* USER CODE END Callback 1 */
+ }

@@ -7,8 +7,13 @@
 // IGpio_t g_xGpe_HallV ;
 // IGpio_t g_xGpe_HallW ;
 
+TimerContainer_t g_xTmContainerMain;
+TimerCounter_t g_xTmCounterMain;
+
 
 void Init_6Step_Unipolar(_6StepCtlCtx_t* ctx, void* pvDriver){
+
+	static TimerTask_t xTmTask1;
 
 
 	ctx->fpCommTb_unipolar = Apply_L6398_CommutationUnipolar;
@@ -16,12 +21,63 @@ void Init_6Step_Unipolar(_6StepCtlCtx_t* ctx, void* pvDriver){
 	ctx->pvDriver = pvDriver;
 
 	PlatformConfig_HallSens_ISR(&ctx->xGpe_HallU, &ctx->xGpe_HallV, &ctx->xGpe_HallW, 
-		OnEdge_Commutation_withHallSens, (void*)&ctx);
+		OnEdge_Commutation_withHallSens, (void*)ctx);
+
+	ctx->ucIsIgnited = 0;
+
+
+	PlatformConfig_BaseTimer(&g_xTmContainerMain, &g_xTmCounterMain);
+
+	xTmTask1.args = (void*)ctx;
+	xTmTask1.fpTmTask = CheckHallState;
+	xTmTask1.uiPeriod = 1000;
+	xTmTask1.ucTimerStatus = HARD_TIMER_STARTED;
+
+	RegisterTimer(&g_xTmContainerMain, &xTmTask1);
 }
 
 
 
+void CheckHallState(void* args){
 
+	uint8_t state = 0;
+	uint8_t read = 0;
+
+	_6StepCtlCtx_t* ctx = (_6StepCtlCtx_t*)args;
+
+	if(ctx->fSetDuty < 1.0f){
+		ctx->ucIsIgnited = 0;
+	}
+
+
+	if(ctx->ucIsIgnited != 0){
+		return;
+	}
+
+
+
+	read = ReadGpio(&ctx->xGpe_HallU);
+	
+    if (read != 0){
+    	state |= 0x01;
+    }
+
+	read = ReadGpio(&ctx->xGpe_HallV);
+
+	if (read != 0){
+		state |= 0x02;
+	}
+
+
+	read = ReadGpio(&ctx->xGpe_HallW);
+
+	if (read != 0){
+		state |= 0x04;
+	}
+
+	ctx->ucCurrSts = state;
+	ctx->fpCommTb_unipolar(ctx->pvDriver, state,  ctx->fSetDuty );
+}
 
 
 
@@ -52,7 +108,8 @@ void OnEdge_Commutation_withHallSens(void* args)
 		state |= 0x04;
 	}
 
-
+	px6Step->ucCurrSts = state;
+	px6Step->ucIsIgnited = 1;
 
 	px6Step->fpCommTb_unipolar(px6Step->pvDriver, state,  px6Step->fSetDuty );
 }
@@ -72,7 +129,7 @@ void CliControl(cli_args_t *args, void* param){
 			int rpm;
 			rpm = args->getData(1);
 
-			if(0 < rpm < 9000){
+			if(0 < rpm && rpm < 9000){
 				px6Step->uiSetRpm = rpm;
 			}
 
@@ -82,7 +139,7 @@ void CliControl(cli_args_t *args, void* param){
 
 			duty = args->getFloat(1);
 
-			if(0 < duty < 90){
+			if(-0.01 < duty && duty < 90){
 				px6Step->fSetDuty = duty;
 			}
 		}

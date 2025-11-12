@@ -51,6 +51,8 @@ DMA_HandleTypeDef hdma_adc1;
 
 UART_HandleTypeDef hlpuart1;
 UART_HandleTypeDef huart3;
+DMA_HandleTypeDef hdma_lpuart1_rx;
+DMA_HandleTypeDef hdma_lpuart1_tx;
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim3;
@@ -87,23 +89,22 @@ uint16_t testPwmVal = 0;
 static _6StepCtlCtx_t g_xCtlUniPolar;
 static L6398_Unipolar_t g_xDriverUniPolar;
 
-// void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-
-// 	switch(GPIO_Pin){
-// 		case GPE_HALL_1_Pin:
-// 			//ReadHallSensors();
-// 			break;
-
-// 		case GPE_HALL_2_Pin:
-// 			break;
-
-// 		case GPE_HALL_3_Pin:
-// 			break;
-
-// 		default:	break;
-// 	}
+// static uint16_t g_uiTickMs = 0;
+// void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+// {
+//   if(htim->Instance == TIM6){
+//     // This is 1ms tick
+//     // Update six step control here
+//     // Update speed control here
+//     g_uiTickMs++;
+//     if(g_uiTickMs >= 1000){
+//       g_uiTickMs = 0;
+//       CheckHallState(&g_xCtlUniPolar);
+//       // Every 1000ms
+//     }
+    
+//   }
 // }
-
 
 /* USER CODE END 0 */
 
@@ -146,43 +147,36 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-
-  __HAL_TIM_SET_COUNTER(&htim1, 0);
-  __HAL_TIM_SET_COUNTER(&htim3, 0);
-
-
-
-  /* USER CODE END 2 */
   printf("Hello Motor World!\r\n");
-
-
-
+  //__HAL_TIM_SET_COUNTER(&htim1, 0);
+  __HAL_TIM_SET_COUNTER(&htim3, 0);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
-  /* Infinite loop */
-
-  testPwmVal = 400;
 
   cliInit((void*)0);
   cliOpen(0, &hlpuart1);
-
-
-  //ApplyCommutation_DRV832x(7, 300); // align
-  HAL_Delay(200);
+  cliAdd("six_step", CliControl, (void*)&g_xCtlUniPolar,  1);
 
   InitL6398_Unipolar(&g_xDriverUniPolar);
   Init_6Step_Unipolar(&g_xCtlUniPolar, (void*)&g_xDriverUniPolar);
 
+
+  HAL_TIM_Base_Start_IT(&htim6);
+
+  printf("Setting Done~\r\n");
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    
 
-
-
+    cliMain();
   }
   /* USER CODE END 3 */
 }
@@ -709,6 +703,12 @@ static void MX_DMA_Init(void)
   /* DMA1_Channel1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+  /* DMA1_Channel2_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);
+  /* DMA1_Channel3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
 
 }
 
@@ -758,13 +758,13 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pins : GPE_HALL_3_Pin GPE_HALL_2_Pin */
   GPIO_InitStruct.Pin = GPE_HALL_3_Pin|GPE_HALL_2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : GPE_HALL_1_Pin */
   GPIO_InitStruct.Pin = GPE_HALL_1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPE_HALL_1_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
