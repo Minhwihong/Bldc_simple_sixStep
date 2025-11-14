@@ -7,6 +7,18 @@
 #include "sensHall.h"
 #include "cli.h"
 
+enum eADC_CH_IDX{
+	eADC_CH_CURR_A = 0,
+	eADC_CH_CURR_B,
+	eADC_CH_CURR_C,
+	eADC_CH_VBUS,
+	eADC_CH_BEMF_A,
+	eADC_CH_BEMF_B,
+	eADC_CH_BEMF_C,
+	eADC_CH_MAX
+};
+
+
 
 enum e6STEP_CTL{
 	e6STEP_CTL_UNIPOLAR = 0,

@@ -89,23 +89,16 @@ uint16_t testPwmVal = 0;
 static _6StepCtlCtx_t g_xCtlUniPolar;
 static L6398_Unipolar_t g_xDriverUniPolar;
 
-// static uint16_t g_uiTickMs = 0;
-// void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-// {
-//   if(htim->Instance == TIM6){
-//     // This is 1ms tick
-//     // Update six step control here
-//     // Update speed control here
-//     g_uiTickMs++;
-//     if(g_uiTickMs >= 1000){
-//       g_uiTickMs = 0;
-//       CheckHallState(&g_xCtlUniPolar);
-//       // Every 1000ms
-//     }
-    
-//   }
-// }
 
+#define ADC_BUFFER_LENGTH    6
+
+uint32_t adc_multimode_buffer[ADC_BUFFER_LENGTH];
+uint16_t g_adc_buffer_ch1[ADC_BUFFER_LENGTH];
+uint16_t g_adc_buffer_ch2[ADC_BUFFER_LENGTH];
+
+float g_fAdcVolt[eADC_CH_MAX];
+float g_fCurrOffset[eADC_CH_MAX];
+float g_fCurrMeas[eADC_CH_MAX];
 /* USER CODE END 0 */
 
 /**
@@ -162,7 +155,30 @@ int main(void)
   Init_6Step_Unipolar(&g_xCtlUniPolar, (void*)&g_xDriverUniPolar);
 
 
+  HAL_ADCEx_MultiModeStart_DMA(&hadc1, adc_multimode_buffer, ADC_BUFFER_LENGTH);
+
+
   HAL_TIM_Base_Start_IT(&htim6);
+  HAL_Delay(100);
+  printf("Start measure current offset~\r\n");
+  // Start Measure Current Offset
+  for(int idx=0; idx<2000; idx++)
+  {
+    for(int i = 0; i < ADC_BUFFER_LENGTH; i++)
+    {
+        g_adc_buffer_ch1[i] = (uint16_t)(adc_multimode_buffer[i] & 0xFFFF);        // ADC1 ?��?��?��
+        g_adc_buffer_ch2[i] = (uint16_t)((adc_multimode_buffer[i] >> 16) & 0xFFFF); // ADC2 ?��?��?�� (마�?막만 ?��?��)
+    }
+
+    g_fCurrOffset[eADC_CH_CURR_A] = ((float)g_adc_buffer_ch1[0]) * (3.3f / 4095.0f);
+    g_fCurrOffset[eADC_CH_CURR_B] = ((float)g_adc_buffer_ch1[2]) * (3.3f / 4095.0f);
+    g_fCurrOffset[eADC_CH_CURR_C] = ((float)g_adc_buffer_ch1[1]) * (3.3f / 4095.0f);
+    g_fCurrOffset[eADC_CH_BEMF_A] = ((float)g_adc_buffer_ch1[3]) * (3.3f / 4095.0f);
+    g_fCurrOffset[eADC_CH_VBUS]   = ((float)g_adc_buffer_ch1[5]) * (3.3f / 4095.0f);
+    g_fCurrOffset[eADC_CH_BEMF_B] = ((float)g_adc_buffer_ch1[4]) * (3.3f / 4095.0f);
+    g_fCurrOffset[eADC_CH_BEMF_C] = ((float)g_adc_buffer_ch2[0]) * (3.3f / 4095.0f);
+    HAL_Delay(1);
+  }
 
   printf("Setting Done~\r\n");
   /* USER CODE END 2 */
@@ -174,7 +190,25 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    
+
+    for(int i = 0; i < ADC_BUFFER_LENGTH; i++)
+    {
+        g_adc_buffer_ch1[i] = (uint16_t)(adc_multimode_buffer[i] & 0xFFFF);        // ADC1 ?��?��?��
+        g_adc_buffer_ch2[i] = (uint16_t)((adc_multimode_buffer[i] >> 16) & 0xFFFF); // ADC2 ?��?��?�� (마�?막만 ?��?��)
+    }
+
+    g_fAdcVolt[eADC_CH_CURR_A] = ((float)g_adc_buffer_ch1[0]) * (3.3f / 4095.0f);
+    g_fAdcVolt[eADC_CH_CURR_B] = ((float)g_adc_buffer_ch1[2]) * (3.3f / 4095.0f);
+    g_fAdcVolt[eADC_CH_CURR_C] = ((float)g_adc_buffer_ch1[1]) * (3.3f / 4095.0f);
+    g_fAdcVolt[eADC_CH_BEMF_A] = ((float)g_adc_buffer_ch1[3]) * (3.3f / 4095.0f);
+    g_fAdcVolt[eADC_CH_VBUS]   = ((float)g_adc_buffer_ch1[5]) * (3.3f / 4095.0f);
+    g_fAdcVolt[eADC_CH_BEMF_B] = ((float)g_adc_buffer_ch1[4]) * (3.3f / 4095.0f);
+    g_fAdcVolt[eADC_CH_BEMF_C] = ((float)g_adc_buffer_ch2[0]) * (3.3f / 4095.0f);
+
+    for(int i = 0; i < ADC_BUFFER_LENGTH; i++)
+    {
+       g_fCurrMeas[i] = g_fAdcVolt[i] - g_fCurrOffset[i];
+    }
 
     cliMain();
   }
@@ -257,7 +291,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc1.Init.LowPowerAutoWait = DISABLE;
   hadc1.Init.ContinuousConvMode = ENABLE;
-  hadc1.Init.NbrOfConversion = 5;
+  hadc1.Init.NbrOfConversion = 6;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
@@ -272,8 +306,8 @@ static void MX_ADC1_Init(void)
   /** Configure the ADC multi-mode
   */
   multimode.Mode = ADC_DUALMODE_REGSIMULT;
-  multimode.DMAAccessMode = ADC_DMAACCESSMODE_DISABLED;
-  multimode.TwoSamplingDelay = ADC_TWOSAMPLINGDELAY_1CYCLE;
+  multimode.DMAAccessMode = ADC_DMAACCESSMODE_12_10_BITS;
+  multimode.TwoSamplingDelay = ADC_TWOSAMPLINGDELAY_4CYCLES;
   if (HAL_ADCEx_MultiModeConfigChannel(&hadc1, &multimode) != HAL_OK)
   {
     Error_Handler();
@@ -327,6 +361,15 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_8;
+  sConfig.Rank = ADC_REGULAR_RANK_6;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
@@ -362,7 +405,7 @@ static void MX_ADC2_Init(void)
   hadc2.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc2.Init.LowPowerAutoWait = DISABLE;
   hadc2.Init.ContinuousConvMode = ENABLE;
-  hadc2.Init.NbrOfConversion = 2;
+  hadc2.Init.NbrOfConversion = 6;
   hadc2.Init.DiscontinuousConvMode = DISABLE;
   hadc2.Init.DMAContinuousRequests = DISABLE;
   hadc2.Init.Overrun = ADC_OVR_DATA_PRESERVED;
@@ -387,7 +430,7 @@ static void MX_ADC2_Init(void)
 
   /** Configure Regular Channel
   */
-  sConfig.Channel = ADC_CHANNEL_17;
+  sConfig.Channel = ADC_CHANNEL_13;
   sConfig.Rank = ADC_REGULAR_RANK_2;
   if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
   {
@@ -395,6 +438,34 @@ static void MX_ADC2_Init(void)
   }
   /* USER CODE BEGIN ADC2_Init 2 */
 
+	sConfig.Channel = ADC_CHANNEL_11;
+	sConfig.Rank = ADC_REGULAR_RANK_3;
+	if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
+	{
+	Error_Handler();
+	}
+
+	sConfig.Channel = ADC_CHANNEL_13;
+	sConfig.Rank = ADC_REGULAR_RANK_4;
+	if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
+	{
+	Error_Handler();
+	}
+
+
+	sConfig.Channel = ADC_CHANNEL_11;
+	sConfig.Rank = ADC_REGULAR_RANK_5;
+	if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
+	{
+	Error_Handler();
+	}
+
+	sConfig.Channel = ADC_CHANNEL_13;
+	sConfig.Rank = ADC_REGULAR_RANK_6;
+	if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
+	{
+	Error_Handler();
+	}
   /* USER CODE END ADC2_Init 2 */
 
 }
@@ -730,9 +801,6 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(BOARD_LED_GPIO_Port, BOARD_LED_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPO_EXBOARD_LED_GPIO_Port, GPO_EXBOARD_LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
@@ -740,13 +808,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : BOARD_LED_Pin */
-  GPIO_InitStruct.Pin = BOARD_LED_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(BOARD_LED_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : GPO_EXBOARD_LED_Pin */
   GPIO_InitStruct.Pin = GPO_EXBOARD_LED_Pin;
@@ -792,6 +853,13 @@ static void MX_GPIO_Init(void)
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 /* USER CODE END MX_GPIO_Init_2 */
 }
 

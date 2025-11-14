@@ -68,6 +68,8 @@ void Error_Handler(void);
 #define A1C6_CURR_C_GPIO_Port GPIOC
 #define A1C7_CURR_B_Pin GPIO_PIN_1
 #define A1C7_CURR_B_GPIO_Port GPIOC
+#define A1C8_VBUS_Pin GPIO_PIN_2
+#define A1C8_VBUS_GPIO_Port GPIOC
 #define A1C9_BEMF_A_Pin GPIO_PIN_3
 #define A1C9_BEMF_A_GPIO_Port GPIOC
 #define A1C1_CURR_A_Pin GPIO_PIN_0
@@ -76,10 +78,6 @@ void Error_Handler(void);
 #define LPUART1_TX_GPIO_Port GPIOA
 #define LPUART1_RX_Pin GPIO_PIN_3
 #define LPUART1_RX_GPIO_Port GPIOA
-#define A2C17_SPD_CTL_Pin GPIO_PIN_4
-#define A2C17_SPD_CTL_GPIO_Port GPIOA
-#define BOARD_LED_Pin GPIO_PIN_5
-#define BOARD_LED_GPIO_Port GPIOA
 #define T3C2_POLE_U_LOW_Pin GPIO_PIN_7
 #define T3C2_POLE_U_LOW_GPIO_Port GPIOA
 #define A2C11_BEMF_C_Pin GPIO_PIN_5

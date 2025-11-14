@@ -112,6 +112,20 @@ void OnEdge_Commutation_withHallSens(void* args)
 	px6Step->ucIsIgnited = 1;
 
 	px6Step->fpCommTb_unipolar(px6Step->pvDriver, state,  px6Step->fSetDuty );
+
+	// Check U
+	//if(state == 4 || state == 5){
+	if(state == 2 || state == 6){
+		//HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
+	}
+	else {
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
+	}
+		
+
+
+	
 }
 
 
