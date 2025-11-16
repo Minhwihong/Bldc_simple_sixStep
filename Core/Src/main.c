@@ -86,19 +86,16 @@ static void MX_TIM3_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 uint16_t testPwmVal = 0;
-static _6StepCtlCtx_t g_xCtlUniPolar;
+
+
+
 static L6398_Unipolar_t g_xDriverUniPolar;
+static _6StepCtlCtx_t g_xCtlUniPolar;
+
+extern void AdcSampling();
 
 
-#define ADC_BUFFER_LENGTH    6
 
-uint32_t adc_multimode_buffer[ADC_BUFFER_LENGTH];
-uint16_t g_adc_buffer_ch1[ADC_BUFFER_LENGTH];
-uint16_t g_adc_buffer_ch2[ADC_BUFFER_LENGTH];
-
-float g_fAdcVolt[eADC_CH_MAX];
-float g_fCurrOffset[eADC_CH_MAX];
-float g_fCurrMeas[eADC_CH_MAX];
 /* USER CODE END 0 */
 
 /**
@@ -135,7 +132,7 @@ int main(void)
   MX_LPUART1_UART_Init();
   MX_TIM6_Init();
   MX_ADC2_Init();
-  //MX_TIM1_Init();
+  MX_TIM1_Init();
   MX_USART3_UART_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
@@ -149,38 +146,19 @@ int main(void)
 
   cliInit((void*)0);
   cliOpen(0, &hlpuart1);
-  cliAdd("six_step", CliControl, (void*)&g_xCtlUniPolar,  1);
 
-  InitL6398_Unipolar(&g_xDriverUniPolar);
-  Init_6Step_Unipolar(&g_xCtlUniPolar, (void*)&g_xDriverUniPolar);
+  InitL6398_Unipolar(&g_xDriverUniPolar, AdcSampling, NULL);
+	Init_6Step_Unipolar(&g_xCtlUniPolar, (void*)&g_xDriverUniPolar);
+	cliAdd("six_step", CliControl, (void*)&g_xCtlUniPolar,  1);
+
+  //
 
 
-  HAL_ADCEx_MultiModeStart_DMA(&hadc1, adc_multimode_buffer, ADC_BUFFER_LENGTH);
+ 
 
 
   HAL_TIM_Base_Start_IT(&htim6);
-  HAL_Delay(100);
-  printf("Start measure current offset~\r\n");
-  // Start Measure Current Offset
-  for(int idx=0; idx<2000; idx++)
-  {
-    for(int i = 0; i < ADC_BUFFER_LENGTH; i++)
-    {
-        g_adc_buffer_ch1[i] = (uint16_t)(adc_multimode_buffer[i] & 0xFFFF);        // ADC1 ?��?��?��
-        g_adc_buffer_ch2[i] = (uint16_t)((adc_multimode_buffer[i] >> 16) & 0xFFFF); // ADC2 ?��?��?�� (마�?막만 ?��?��)
-    }
-
-    g_fCurrOffset[eADC_CH_CURR_A] = ((float)g_adc_buffer_ch1[0]) * (3.3f / 4095.0f);
-    g_fCurrOffset[eADC_CH_CURR_B] = ((float)g_adc_buffer_ch1[2]) * (3.3f / 4095.0f);
-    g_fCurrOffset[eADC_CH_CURR_C] = ((float)g_adc_buffer_ch1[1]) * (3.3f / 4095.0f);
-    g_fCurrOffset[eADC_CH_BEMF_A] = ((float)g_adc_buffer_ch1[3]) * (3.3f / 4095.0f);
-    g_fCurrOffset[eADC_CH_VBUS]   = ((float)g_adc_buffer_ch1[5]) * (3.3f / 4095.0f);
-    g_fCurrOffset[eADC_CH_BEMF_B] = ((float)g_adc_buffer_ch1[4]) * (3.3f / 4095.0f);
-    g_fCurrOffset[eADC_CH_BEMF_C] = ((float)g_adc_buffer_ch2[0]) * (3.3f / 4095.0f);
-    HAL_Delay(1);
-  }
-
-  printf("Setting Done~\r\n");
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -190,7 +168,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
+#if 0
     for(int i = 0; i < ADC_BUFFER_LENGTH; i++)
     {
         g_adc_buffer_ch1[i] = (uint16_t)(adc_multimode_buffer[i] & 0xFFFF);        // ADC1 ?��?��?��
@@ -209,7 +187,7 @@ int main(void)
     {
        g_fCurrMeas[i] = g_fAdcVolt[i] - g_fCurrOffset[i];
     }
-
+#endif
     cliMain();
   }
   /* USER CODE END 3 */
@@ -405,7 +383,7 @@ static void MX_ADC2_Init(void)
   hadc2.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc2.Init.LowPowerAutoWait = DISABLE;
   hadc2.Init.ContinuousConvMode = ENABLE;
-  hadc2.Init.NbrOfConversion = 6;
+  hadc2.Init.NbrOfConversion = 2;
   hadc2.Init.DiscontinuousConvMode = DISABLE;
   hadc2.Init.DMAContinuousRequests = DISABLE;
   hadc2.Init.Overrun = ADC_OVR_DATA_PRESERVED;

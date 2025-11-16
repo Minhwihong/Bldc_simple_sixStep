@@ -12,6 +12,8 @@
 #define PWM_POLE_W_NEG           (6)
 
 
+typedef void (*fpPeriodCb)(void*);
+
 enum eBLDC_PWM_CH{
     ePWM_POLE_U_POS = 0,
     ePWM_POLE_U_NEG,
@@ -39,6 +41,9 @@ typedef struct PWM_Complementary_tag{
 typedef struct IPwm_tag{
     Pwm1Ch_HwWrapper* pxPwmSrc;
     u8 ucChId;
+
+    fpPeriodCb fpPeriodDoneCb;
+    void* args;
 }IPwm_t;
 
 
@@ -53,7 +58,7 @@ typedef struct IPwm_tag{
 void Pwm1_StartStop(IPwm_t* pxPwm, u8 OnOff);
 void Pwm1_InitHw(IPwm_t* pxPwm, Pwm1Ch_HwWrapper* pxHw, u8 ucBldcCh);
 void Pwm1_Generate(IPwm_t* pxCtx, float fDuty);
-
+void Pwm1_AddCallbackPeriodDone(IPwm_t* pxPwm, fpPeriodCb fpCb, void* _args);
 
 void Pwm2_StartStop(IPwm_t* pxPwm, u8 OnOff);
 void Pwm2_InitHw(IPwm_t* pxPwm, Pwm1Ch_HwWrapper* pxHw, u8 ucBldcCh);

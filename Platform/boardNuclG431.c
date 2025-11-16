@@ -45,6 +45,16 @@ void PlatformConfig_BaseTimer(TimerContainer_t* pxTmContainer, TimerCounter_t* p
 }
 
 
+void PlatformCOnfig_PwmPeriodCallback(TimerContainer_t* pxTmContainerPwm){
+
+  static Tm_HwWrapper basicTimer;
+
+  basicTimer.pxTimer = &htim6;
+
+  InitTimer(pxTmContainerPwm, &basicTimer);
+
+}
+
 
 void PlatformConfig_6stepUniPolar(IPwm_t* pxPhaseUHigh, IPwm_t* pxPhaseVHigh, IPwm_t* pxPhaseWHigh,
   IGpio_t* pxPhaseULow, IGpio_t* pxPhaseVLow, IGpio_t* pxPhaseWLow

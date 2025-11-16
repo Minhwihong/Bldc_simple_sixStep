@@ -29,7 +29,7 @@ typedef struct L6398_Bipolar_tag{
 } L6398_Bipolar_t;
 
 
-void InitL6398_Unipolar(L6398_Unipolar_t* pxDrive);
+void InitL6398_Unipolar(L6398_Unipolar_t* pxDrive, fpPeriodCb fpCb, void* _args);
 
 void Apply_L6398_CommutationUnipolar(void* args, uint8_t state, float pwmVal);
 

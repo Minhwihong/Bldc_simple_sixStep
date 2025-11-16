@@ -2,18 +2,50 @@
 #include "main.h"
 #include "L6398.h"
 #include "boardNuclG431.h"
+#include "measSupport.h"
 
 // IGpio_t g_xGpe_HallU ;
 // IGpio_t g_xGpe_HallV ;
 // IGpio_t g_xGpe_HallW ;
 
+
+/* ********************************
+debug pin added 3ch
+PB7
+PC8
+PC10
+******************************** */
+
+
+#define ADC_SAMPLE_PER_CH   (32)
+#define ADC_BUFFER_LENGTH    6
+
 TimerContainer_t g_xTmContainerMain;
+TimerContainer_t g_xTmContainerPwm;
 TimerCounter_t g_xTmCounterMain;
 
+
+
+float g_fAdcVolt[eADC_CH_MAX];
+float g_fCurrOffset[eADC_CH_MAX];
+float g_fCurrMeas[eADC_CH_MAX];
+
+uint32_t adc_multimode_buffer[ADC_BUFFER_LENGTH*ADC_SAMPLE_PER_CH];
+uint16_t g_adc_buffer_ch1[ADC_BUFFER_LENGTH*ADC_SAMPLE_PER_CH];
+uint16_t g_adc_buffer_ch2[ADC_BUFFER_LENGTH*ADC_SAMPLE_PER_CH];
+
+
+
+
+
+void AdcSampling(void* args);
 
 void Init_6Step_Unipolar(_6StepCtlCtx_t* ctx, void* pvDriver){
 
 	static TimerTask_t xTmTask1;
+
+
+
 
 
 	ctx->fpCommTb_unipolar = Apply_L6398_CommutationUnipolar;
@@ -23,7 +55,40 @@ void Init_6Step_Unipolar(_6StepCtlCtx_t* ctx, void* pvDriver){
 	PlatformConfig_HallSens_ISR(&ctx->xGpe_HallU, &ctx->xGpe_HallV, &ctx->xGpe_HallW, 
 		OnEdge_Commutation_withHallSens, (void*)ctx);
 
+	//Pwm1_AddCallbackPeriodDone(ctx->, fpPeriodCb fpCb, void* _args);
+
 	ctx->ucIsIgnited = 0;
+
+
+
+	HAL_ADCEx_MultiModeStart_DMA(&hadc1, adc_multimode_buffer, ADC_BUFFER_LENGTH*ADC_SAMPLE_PER_CH);
+
+	HAL_Delay(100);
+	printf("Start measure current offset~\r\n");
+	// Start Measure Current Offset
+	for(int idx=0; idx<2000; idx++) {
+
+		for(int i = 0; i < ADC_BUFFER_LENGTH; i++) {
+
+			g_adc_buffer_ch1[i] = (uint16_t)(adc_multimode_buffer[i] & 0xFFFF);        // ADC1 ?��?��?��
+			g_adc_buffer_ch2[i] = (uint16_t)((adc_multimode_buffer[i] >> 16) & 0xFFFF); // ADC2 ?��?��?�� (마�?막만 ?��?��)
+		}
+
+		g_fCurrOffset[eADC_CH_CURR_A] = ((float)g_adc_buffer_ch1[0]) * (3.3f / 4095.0f);
+		g_fCurrOffset[eADC_CH_CURR_B] = ((float)g_adc_buffer_ch1[2]) * (3.3f / 4095.0f);
+		g_fCurrOffset[eADC_CH_CURR_C] = ((float)g_adc_buffer_ch1[1]) * (3.3f / 4095.0f);
+		g_fCurrOffset[eADC_CH_BEMF_A] = ((float)g_adc_buffer_ch1[3]) * (3.3f / 4095.0f);
+		g_fCurrOffset[eADC_CH_VBUS]   = ((float)g_adc_buffer_ch1[5]) * (3.3f / 4095.0f);
+		g_fCurrOffset[eADC_CH_BEMF_B] = ((float)g_adc_buffer_ch1[4]) * (3.3f / 4095.0f);
+		g_fCurrOffset[eADC_CH_BEMF_C] = ((float)g_adc_buffer_ch2[0]) * (3.3f / 4095.0f);
+		HAL_Delay(1);
+	}
+
+	printf("Setting Done~\r\n");
+
+
+
+
 
 
 	PlatformConfig_BaseTimer(&g_xTmContainerMain, &g_xTmCounterMain);
@@ -127,6 +192,75 @@ void OnEdge_Commutation_withHallSens(void* args)
 
 	
 }
+
+
+
+
+
+
+
+void AdcSampling(void* args){
+
+	uint32_t avgVal = 0;
+
+
+	for(int i = 0; i < ADC_BUFFER_LENGTH; i++) {
+
+		switch(i){
+			case 0:
+				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 0, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+				g_fAdcVolt[eADC_CH_CURR_A] = ((float)avgVal) * (3.3f / 4095.0f);
+				break;
+			case 2:
+				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 2, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+				g_fAdcVolt[eADC_CH_CURR_B] = ((float)avgVal) * (3.3f / 4095.0f);
+				break;
+			case 1:
+				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 1, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+				g_fAdcVolt[eADC_CH_CURR_C] = ((float)avgVal) * (3.3f / 4095.0f);
+				break;
+			case 3:
+				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 3, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+				g_fAdcVolt[eADC_CH_BEMF_A] = ((float)avgVal) * (3.3f / 4095.0f);
+				break;
+
+			case 5:
+				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 3, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+				g_fAdcVolt[eADC_CH_VBUS] = ((float)avgVal) * (3.3f / 4095.0f);
+				break;
+
+			case 4:
+				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 4, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+				g_fAdcVolt[eADC_CH_BEMF_B] = ((float)avgVal) * (3.3f / 4095.0f);
+				break;
+		}
+
+        avgVal = Calculate_AverageU32_upper(adc_multimode_buffer, 4, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+		g_fAdcVolt[eADC_CH_BEMF_C] = ((float)avgVal) * (3.3f / 4095.0f);
+    }
+
+
+
+    for(int i = 0; i < ADC_BUFFER_LENGTH; i++)
+    {
+       g_fCurrMeas[i] = g_fAdcVolt[i] - g_fCurrOffset[i];
+    }
+
+	if(g_fCurrMeas[eADC_CH_BEMF_A] > 0.1f){
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+	}
+	else {
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
+	}
+
+
+}
+
+
+
+
+
+
 
 
 

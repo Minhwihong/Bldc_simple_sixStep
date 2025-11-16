@@ -9,7 +9,7 @@ IGpio_t g_xGpo_phaseU_lowside;
 IGpio_t g_xGpo_phaseV_lowside;
 IGpio_t g_xGpo_phaseW_lowside;
 
-void InitL6398_Unipolar(L6398_Unipolar_t* pxDrive){
+void InitL6398_Unipolar(L6398_Unipolar_t* pxDrive, fpPeriodCb fpCb, void* _args){
 
     PlatformConfig_6stepUniPolar(&g_xPwm_phaseU_highside, &g_xPwm_phaseV_highside, &g_xPwm_phaseW_highside,
 		&g_xGpo_phaseU_lowside, &g_xGpo_phaseV_lowside, &g_xGpo_phaseW_lowside);
@@ -25,6 +25,9 @@ void InitL6398_Unipolar(L6398_Unipolar_t* pxDrive){
 	pxDrive->pxPwmW_highSide = &g_xPwm_phaseW_highside;
 	pxDrive->pxPinW_lowSide = &g_xGpo_phaseW_lowside;
 
+    Pwm1_AddCallbackPeriodDone(pxDrive->pxPwmU_highSide, fpCb, _args);
+    // Pwm1_AddCallbackPeriodDone(pxDrive->pxPwmV_highSide, fpCb, _args);
+    // Pwm1_AddCallbackPeriodDone(pxDrive->pxPwmW_highSide, fpCb, _args);
 
 // 	g_xDriverUniPolar.pxPwmU_highSide = &g_xPwm_phaseU_highside;
 // 	g_xDriverUniPolar.pxPinU_lowSide = &g_xGpo_phaseU_lowside;

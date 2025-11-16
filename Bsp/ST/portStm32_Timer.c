@@ -1,8 +1,10 @@
 #include "portStm32_Timer.h"
 #include "IF_timer.h"
+#include "IF_pwm.h"
 
 extern TimerContainer_t* g_pxTmContainerMain ;
-
+extern IPwm_t* g_apxHwCbContainer[5];
+extern uint8_t g_ucHwCbCount;
 
 
 
@@ -64,6 +66,15 @@ void portSTM32_ResetTimerCount(Tm_HwWrapper* pxTimer){
    if( htim->Instance == TIM6 ) {
 
      HWTimerCallback(g_pxTmContainerMain);
+   }
+   else if(htim->Instance == TIM3) {
+     //Other Timer Callback if needed
+     for(uint8_t i=0; i<g_ucHwCbCount; i++){
+
+            if(g_apxHwCbContainer[i]->pxPwmSrc->pxPwmHw == htim){
+                Pwm1_HwPeriodElapsedCallback(g_apxHwCbContainer[i]);
+            }
+        }
    }
    /* USER CODE END Callback 1 */
  }
