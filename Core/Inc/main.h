@@ -95,6 +95,8 @@ void Error_Handler(void);
 #define GPE_HALL_3_EXTI_IRQn EXTI15_10_IRQn
 #define A1C14_BEMF_B_Pin GPIO_PIN_11
 #define A1C14_BEMF_B_GPIO_Port GPIOB
+#define GPO_DBG_3_Pin GPIO_PIN_8
+#define GPO_DBG_3_GPIO_Port GPIOC
 #define T1C1_POLE_U_HIGH_Pin GPIO_PIN_8
 #define T1C1_POLE_U_HIGH_GPIO_Port GPIOA
 #define T1C2_POLE_V_HIGH_Pin GPIO_PIN_9
@@ -108,9 +110,13 @@ void Error_Handler(void);
 #define GPE_HALL_1_Pin GPIO_PIN_15
 #define GPE_HALL_1_GPIO_Port GPIOA
 #define GPE_HALL_1_EXTI_IRQn EXTI15_10_IRQn
+#define GPO_DBG_1_Pin GPIO_PIN_10
+#define GPO_DBG_1_GPIO_Port GPIOC
 #define GPE_HALL_2_Pin GPIO_PIN_3
 #define GPE_HALL_2_GPIO_Port GPIOB
 #define GPE_HALL_2_EXTI_IRQn EXTI3_IRQn
+#define GPO_DBG_2_Pin GPIO_PIN_7
+#define GPO_DBG_2_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

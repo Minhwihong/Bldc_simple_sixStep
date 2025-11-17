@@ -17,7 +17,7 @@ PC10
 ******************************** */
 
 
-#define ADC_SAMPLE_PER_CH   (32)
+#define ADC_SAMPLE_PER_CH   (4)
 #define ADC_BUFFER_LENGTH    6
 
 TimerContainer_t g_xTmContainerMain;
@@ -25,7 +25,7 @@ TimerContainer_t g_xTmContainerPwm;
 TimerCounter_t g_xTmCounterMain;
 
 
-
+float g_fBemfVolt[3];
 float g_fAdcVolt[eADC_CH_MAX];
 float g_fCurrOffset[eADC_CH_MAX];
 float g_fCurrMeas[eADC_CH_MAX];
@@ -43,9 +43,6 @@ void AdcSampling(void* args);
 void Init_6Step_Unipolar(_6StepCtlCtx_t* ctx, void* pvDriver){
 
 	static TimerTask_t xTmTask1;
-
-
-
 
 
 	ctx->fpCommTb_unipolar = Apply_L6398_CommutationUnipolar;
@@ -68,6 +65,43 @@ void Init_6Step_Unipolar(_6StepCtlCtx_t* ctx, void* pvDriver){
 	// Start Measure Current Offset
 	for(int idx=0; idx<2000; idx++) {
 
+	for(int i = 0; i < ADC_BUFFER_LENGTH; i++) {
+
+		u32 avgVal = 0;
+
+		switch(i){
+			case 0:
+				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 0, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+				g_fCurrOffset[eADC_CH_CURR_A] = ((float)avgVal) * (3.3f / 4095.0f);
+				break;
+			case 2:
+				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 2, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+				g_fCurrOffset[eADC_CH_CURR_B] = ((float)avgVal) * (3.3f / 4095.0f);
+				break;
+			case 1:
+				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 1, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+				g_fCurrOffset[eADC_CH_CURR_C] = ((float)avgVal) * (3.3f / 4095.0f);
+				break;
+			case 3:
+				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 3, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+				g_fCurrOffset[eADC_CH_BEMF_A] = ((float)avgVal) * (3.3f / 4095.0f);
+				break;
+
+			case 5:
+				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 5, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+				g_fCurrOffset[eADC_CH_VBUS] = ((float)avgVal) * (3.3f / 4095.0f);
+				break;
+
+			case 4:
+				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 4, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+				g_fCurrOffset[eADC_CH_BEMF_B] = ((float)avgVal) * (3.3f / 4095.0f);
+				break;
+		}
+
+        avgVal = Calculate_AverageU32_upper(adc_multimode_buffer, 0, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+		g_fCurrOffset[eADC_CH_BEMF_C] = ((float)avgVal) * (3.3f / 4095.0f);
+    }
+#if 0
 		for(int i = 0; i < ADC_BUFFER_LENGTH; i++) {
 
 			g_adc_buffer_ch1[i] = (uint16_t)(adc_multimode_buffer[i] & 0xFFFF);        // ADC1 ?��?��?��
@@ -81,6 +115,7 @@ void Init_6Step_Unipolar(_6StepCtlCtx_t* ctx, void* pvDriver){
 		g_fCurrOffset[eADC_CH_VBUS]   = ((float)g_adc_buffer_ch1[5]) * (3.3f / 4095.0f);
 		g_fCurrOffset[eADC_CH_BEMF_B] = ((float)g_adc_buffer_ch1[4]) * (3.3f / 4095.0f);
 		g_fCurrOffset[eADC_CH_BEMF_C] = ((float)g_adc_buffer_ch2[0]) * (3.3f / 4095.0f);
+#endif
 		HAL_Delay(1);
 	}
 
@@ -182,10 +217,12 @@ void OnEdge_Commutation_withHallSens(void* args)
 	//if(state == 4 || state == 5){
 	if(state == 2 || state == 6){
 		//HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
+		//HAL_GPIO_WritePin(GPO_DBG_3_GPIO_Port, GPO_DBG_3_Pin, GPIO_PIN_SET);
+
 	}
 	else {
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
+		//HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
+		//HAL_GPIO_WritePin(GPO_DBG_3_GPIO_Port, GPO_DBG_3_Pin, GPIO_PIN_RESET);
 	}
 		
 
@@ -196,14 +233,56 @@ void OnEdge_Commutation_withHallSens(void* args)
 
 
 
-
+//uint32_t g_TestSmple[3] = {0,};
 
 
 void AdcSampling(void* args){
 
 	uint32_t avgVal = 0;
 
+	//HAL_GPIO_WritePin(GPO_DBG_3_GPIO_Port, GPO_DBG_3_Pin, GPIO_PIN_SET);
 
+	avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 3, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+	g_fAdcVolt[eADC_CH_BEMF_A] = ((float)avgVal) * (3.3f / 4095.0f);
+	//g_TestSmple[eADC_CH_BEMF_A] = avgVal;
+
+	avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 4, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+	g_fAdcVolt[eADC_CH_BEMF_B] = ((float)avgVal) * (3.3f / 4095.0f);
+	//g_TestSmple[eADC_CH_BEMF_B] = avgVal;
+
+	avgVal = Calculate_AverageU32_upper(adc_multimode_buffer, 4, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+	g_fAdcVolt[eADC_CH_BEMF_C] = ((float)avgVal) * (3.3f / 4095.0f);
+	//g_TestSmple[eADC_CH_BEMF_C] = avgVal;
+
+	g_fBemfVolt[0] = g_fAdcVolt[eADC_CH_BEMF_A] - g_fCurrOffset[eADC_CH_BEMF_A];
+	g_fBemfVolt[1] = g_fAdcVolt[eADC_CH_BEMF_B] - g_fCurrOffset[eADC_CH_BEMF_B];
+	g_fBemfVolt[2] = g_fAdcVolt[eADC_CH_BEMF_C] - g_fCurrOffset[eADC_CH_BEMF_C];
+
+
+	if(g_fBemfVolt[0] > 0.1f){
+		HAL_GPIO_WritePin(GPO_DBG_1_GPIO_Port, GPO_DBG_1_Pin, GPIO_PIN_SET);
+	}
+	else {
+		HAL_GPIO_WritePin(GPO_DBG_1_GPIO_Port, GPO_DBG_1_Pin, GPIO_PIN_RESET);
+	}
+
+	if(g_fBemfVolt[1] > 0.1f){
+		HAL_GPIO_WritePin(GPO_DBG_2_GPIO_Port, GPO_DBG_2_Pin, GPIO_PIN_SET);
+	}
+	else {
+		HAL_GPIO_WritePin(GPO_DBG_2_GPIO_Port, GPO_DBG_2_Pin, GPIO_PIN_RESET);
+	}
+
+	if(g_fBemfVolt[2] > 0.1f){
+		HAL_GPIO_WritePin(GPO_DBG_3_GPIO_Port, GPO_DBG_3_Pin, GPIO_PIN_SET);
+	}
+	else {
+		HAL_GPIO_WritePin(GPO_DBG_3_GPIO_Port, GPO_DBG_3_Pin, GPIO_PIN_RESET);
+	}
+
+
+
+#if 0
 	for(int i = 0; i < ADC_BUFFER_LENGTH; i++) {
 
 		switch(i){
@@ -243,16 +322,12 @@ void AdcSampling(void* args){
 
     for(int i = 0; i < ADC_BUFFER_LENGTH; i++)
     {
-       g_fCurrMeas[i] = g_fAdcVolt[i] - g_fCurrOffset[i];
+       
     }
 
-	if(g_fCurrMeas[eADC_CH_BEMF_A] > 0.1f){
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
-	}
-	else {
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-	}
 
+#endif
+	//HAL_GPIO_WritePin(GPO_DBG_3_GPIO_Port, GPO_DBG_3_Pin, GPIO_PIN_RESET);
 
 }
 

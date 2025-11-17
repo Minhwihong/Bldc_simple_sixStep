@@ -6,6 +6,7 @@ extern TimerContainer_t* g_pxTmContainerMain ;
 extern IPwm_t* g_apxHwCbContainer[5];
 extern uint8_t g_ucHwCbCount;
 
+extern void Pwm1_HwPeriodElapsedCallback(IPwm_t* pxHw);
 
 
 void StartHWTimer(Tm_HwWrapper* pxHwTimer){
