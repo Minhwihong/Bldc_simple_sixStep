@@ -73,7 +73,7 @@ void Apply_L6398_CommutationUnipolar(void* pxDriver, uint8_t state, float pwmVal
 
 //void HallEdgeDetected(void* args);
 
-void CheckHallState(void* ctx);
+void TmCheckHallState(void* ctx);
 
 void CliControl(cli_args_t *args, void* param);
 

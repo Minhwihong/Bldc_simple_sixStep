@@ -281,8 +281,22 @@ void ADC1_2_IRQHandler(void)
   */
 void TIM3_IRQHandler(void)
 {
+
   /* USER CODE BEGIN TIM3_IRQn 0 */
 
+  // uint32_t itsource = htim3.Instance->DIER;
+  // uint32_t itflag   = htim3.Instance->SR;
+  // if ((itflag & (TIM_FLAG_UPDATE)) == (TIM_FLAG_UPDATE))
+  // {
+  //   if ((itsource & (TIM_IT_UPDATE)) == (TIM_IT_UPDATE))
+  //   {
+  //     __HAL_TIM_CLEAR_FLAG(&htim3, TIM_FLAG_UPDATE);
+  //     AdcSampling(NULL);
+  //   }
+  // }
+
+  // return;
+  
   /* USER CODE END TIM3_IRQn 0 */
   HAL_TIM_IRQHandler(&htim3);
   /* USER CODE BEGIN TIM3_IRQn 1 */

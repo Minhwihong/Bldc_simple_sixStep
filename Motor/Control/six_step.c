@@ -26,16 +26,24 @@ TimerCounter_t g_xTmCounterMain;
 
 
 float g_fBemfVolt[3];
+float g_fBemfVolt_filtered[3];
 float g_fAdcVolt[eADC_CH_MAX];
 float g_fCurrOffset[eADC_CH_MAX];
-float g_fCurrMeas[eADC_CH_MAX];
+float g_fCurrMeas[3];
+
+
+uint32_t g_uiOneCycleTime = 0;
+uint32_t g_uiOneCycleTimeFilter = 0;
+uint32_t g_uiOneCycleOverFlowCnt = 0;
+uint32_t g_uiZeroDelOverflowCnt = 0;
 
 uint32_t adc_multimode_buffer[ADC_BUFFER_LENGTH*ADC_SAMPLE_PER_CH];
 uint16_t g_adc_buffer_ch1[ADC_BUFFER_LENGTH*ADC_SAMPLE_PER_CH];
 uint16_t g_adc_buffer_ch2[ADC_BUFFER_LENGTH*ADC_SAMPLE_PER_CH];
 
+static float LowPassFilter(float fInput, float fPrevOutput, float fAlpha);
 
-
+void TmCheckCounter(void* args);
 
 
 void AdcSampling(void* args);
@@ -43,6 +51,7 @@ void AdcSampling(void* args);
 void Init_6Step_Unipolar(_6StepCtlCtx_t* ctx, void* pvDriver){
 
 	static TimerTask_t xTmTask1;
+	static TimerTask_t xTmTask2;
 
 
 	ctx->fpCommTb_unipolar = Apply_L6398_CommutationUnipolar;
@@ -129,16 +138,33 @@ void Init_6Step_Unipolar(_6StepCtlCtx_t* ctx, void* pvDriver){
 	PlatformConfig_BaseTimer(&g_xTmContainerMain, &g_xTmCounterMain);
 
 	xTmTask1.args = (void*)ctx;
-	xTmTask1.fpTmTask = CheckHallState;
+	xTmTask1.fpTmTask = TmCheckHallState;
 	xTmTask1.uiPeriod = 1000;
 	xTmTask1.ucTimerStatus = HARD_TIMER_STARTED;
 
 	RegisterTimer(&g_xTmContainerMain, &xTmTask1);
+
+
+	xTmTask2.args = (void*)ctx;
+	xTmTask2.fpTmTask = TmCheckCounter;
+	xTmTask2.uiPeriod = 1;
+	xTmTask2.ucTimerStatus = HARD_TIMER_STARTED;
+
+	RegisterTimer(&g_xTmContainerMain, &xTmTask2);
+}
+
+
+void TmCheckCounter(void* args){
+	g_uiOneCycleOverFlowCnt++;
+	g_uiZeroDelOverflowCnt++;
 }
 
 
 
-void CheckHallState(void* args){
+void TmCheckHallState(void* args){
+
+	
+	//g_uiOneCycleTime
 
 	uint8_t state = 0;
 	uint8_t read = 0;
@@ -177,6 +203,9 @@ void CheckHallState(void* args){
 
 	ctx->ucCurrSts = state;
 	ctx->fpCommTb_unipolar(ctx->pvDriver, state,  ctx->fSetDuty );
+
+	
+	
 }
 
 
@@ -187,7 +216,8 @@ void OnEdge_Commutation_withHallSens(void* args)
 	uint8_t read = 0;
 	_6StepCtlCtx_t* px6Step = (_6StepCtlCtx_t*)args;
 
-	
+	static u32 uiTimePre = 0;
+	u32 uiTimeCurr = 0;
 
 	read = ReadGpio(&px6Step->xGpe_HallU);
 	
@@ -215,28 +245,70 @@ void OnEdge_Commutation_withHallSens(void* args)
 
 	// Check U
 	//if(state == 4 || state == 5){
-	if(state == 2 || state == 6){
-		//HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_7);
-		//HAL_GPIO_WritePin(GPO_DBG_3_GPIO_Port, GPO_DBG_3_Pin, GPIO_PIN_SET);
-
+	if(state == 2){	// // A: Low   B: PWM
+		HAL_GPIO_WritePin(GPO_DBG_3_GPIO_Port, GPO_DBG_3_Pin, GPIO_PIN_SET);
 	}
-	else {
-		//HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
-		//HAL_GPIO_WritePin(GPO_DBG_3_GPIO_Port, GPO_DBG_3_Pin, GPIO_PIN_RESET);
+
+	if(state == 5){	// A: PWM   B: Low
+		HAL_GPIO_WritePin(GPO_DBG_3_GPIO_Port, GPO_DBG_3_Pin, GPIO_PIN_RESET);
 	}
 		
 
+	uint32_t avgVal = 0;
 
+	avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 0, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+	g_fAdcVolt[eADC_CH_CURR_A] = ((float)avgVal) * (3.3f / 4095.0f);
+
+	avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 2, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+	g_fAdcVolt[eADC_CH_CURR_B] = ((float)avgVal) * (3.3f / 4095.0f);
+
+	avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 1, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+	g_fAdcVolt[eADC_CH_CURR_C] = ((float)avgVal) * (3.3f / 4095.0f);
+
+	avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 3, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
+	g_fAdcVolt[eADC_CH_VBUS] = ((float)avgVal) * (3.3f / 4095.0f);
+
+	g_fCurrMeas[0] = g_fAdcVolt[eADC_CH_CURR_A] - g_fCurrOffset[eADC_CH_CURR_A];
+	g_fCurrMeas[1] = g_fAdcVolt[eADC_CH_CURR_B] - g_fCurrOffset[eADC_CH_CURR_B];
+	g_fCurrMeas[2] = g_fAdcVolt[eADC_CH_CURR_C] - g_fCurrOffset[eADC_CH_CURR_C];
+
+	 
+
+
+	uiTimeCurr = __HAL_TIM_GET_COUNTER(&htim6); 
+	g_uiOneCycleTime = ( 1000 * g_uiOneCycleOverFlowCnt) + uiTimeCurr - uiTimePre;
+
+//	if(uiTimePre < uiTimeCurr){
+//
+//
+//
+//	}
+//	else {
+//		// Timer overflowed
+//		g_uiOneCycleOverFlowCnt--;
+//		g_uiOneCycleTime = ( 1000 * g_uiOneCycleOverFlowCnt) + (uiTimeCurr + htim6.Init.Period) - uiTimePre;
+//	}
+
+	g_uiOneCycleTimeFilter = (u32)LowPassFilter( (float)g_uiOneCycleTime, (float)g_uiOneCycleTimeFilter, 0.1);
+
+	g_uiOneCycleOverFlowCnt = 0;
 	
+	uiTimePre = uiTimeCurr;
 }
 
 
-
-
-//uint32_t g_TestSmple[3] = {0,};
-
+#define ZERO_CROSS_NOT_DETECTED (0)
+#define ZERO_CROSS_RISING_EDGE   (1)	
+#define ZERO_CROSS_FALLING_EDGE  (2)
 
 void AdcSampling(void* args){
+
+	static u8 ucZeroCrossA = 0;
+	static float fBemfA_prev = 0.0f;
+	static u32 uiZcRiseTime = 0;
+	static u32 uiZcFallTime = 0;
+
+	u32 uiCurrTime = 0;
 
 	uint32_t avgVal = 0;
 
@@ -257,77 +329,54 @@ void AdcSampling(void* args){
 	g_fBemfVolt[0] = g_fAdcVolt[eADC_CH_BEMF_A] - g_fCurrOffset[eADC_CH_BEMF_A];
 	g_fBemfVolt[1] = g_fAdcVolt[eADC_CH_BEMF_B] - g_fCurrOffset[eADC_CH_BEMF_B];
 	g_fBemfVolt[2] = g_fAdcVolt[eADC_CH_BEMF_C] - g_fCurrOffset[eADC_CH_BEMF_C];
+ 
+	g_fBemfVolt_filtered[0] = LowPassFilter(g_fBemfVolt[0], g_fBemfVolt_filtered[0], 0.2f);
+	g_fBemfVolt_filtered[1] = LowPassFilter(g_fBemfVolt[1], g_fBemfVolt_filtered[1], 0.2f);
+	g_fBemfVolt_filtered[2] = LowPassFilter(g_fBemfVolt[2], g_fBemfVolt_filtered[2], 0.2f);
 
-
-	if(g_fBemfVolt[0] > 0.1f){
-		HAL_GPIO_WritePin(GPO_DBG_1_GPIO_Port, GPO_DBG_1_Pin, GPIO_PIN_SET);
-	}
-	else {
-		HAL_GPIO_WritePin(GPO_DBG_1_GPIO_Port, GPO_DBG_1_Pin, GPIO_PIN_RESET);
-	}
-
-	if(g_fBemfVolt[1] > 0.1f){
-		HAL_GPIO_WritePin(GPO_DBG_2_GPIO_Port, GPO_DBG_2_Pin, GPIO_PIN_SET);
-	}
-	else {
+	if(g_fBemfVolt_filtered[0] > 0.1f){
 		HAL_GPIO_WritePin(GPO_DBG_2_GPIO_Port, GPO_DBG_2_Pin, GPIO_PIN_RESET);
 	}
-
-	if(g_fBemfVolt[2] > 0.1f){
-		HAL_GPIO_WritePin(GPO_DBG_3_GPIO_Port, GPO_DBG_3_Pin, GPIO_PIN_SET);
-	}
 	else {
-		HAL_GPIO_WritePin(GPO_DBG_3_GPIO_Port, GPO_DBG_3_Pin, GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(GPO_DBG_2_GPIO_Port, GPO_DBG_2_Pin, GPIO_PIN_SET);
+	}
+
+	if( (fBemfA_prev <= 1.0f) && (g_fBemfVolt_filtered[0] > 1.0f) ){
+		// Rising edge detected
+		ucZeroCrossA = ZERO_CROSS_RISING_EDGE;
+		uiZcRiseTime = __HAL_TIM_GET_COUNTER(&htim6);
+		g_uiZeroDelOverflowCnt = 0;
+		//HAL_GPIO_WritePin(GPO_DBG_2_GPIO_Port, GPO_DBG_2_Pin, GPIO_PIN_RESET);
+		
+	}
+	else if( (fBemfA_prev >= 1.0f) && (g_fBemfVolt_filtered[0] < 1.0f) ){
+		ucZeroCrossA = ZERO_CROSS_FALLING_EDGE;
+		uiZcRiseTime = __HAL_TIM_GET_COUNTER(&htim6);
+		g_uiZeroDelOverflowCnt = 0;
+		//HAL_GPIO_WritePin(GPO_DBG_2_GPIO_Port, GPO_DBG_2_Pin, GPIO_PIN_RESET);
+	}
+
+	if(ucZeroCrossA == ZERO_CROSS_RISING_EDGE || ucZeroCrossA == ZERO_CROSS_FALLING_EDGE){
+		
+		uiCurrTime = __HAL_TIM_GET_COUNTER(&htim6);
+
+		//if(uiCurrTime - uiZcRiseTime > g_uiOneCycleTime / 2){
+		if((1000 * g_uiZeroDelOverflowCnt) + uiCurrTime - uiZcRiseTime > g_uiOneCycleTime / 2){
+			if(ucZeroCrossA == ZERO_CROSS_RISING_EDGE){
+				HAL_GPIO_WritePin(GPO_DBG_1_GPIO_Port, GPO_DBG_1_Pin, GPIO_PIN_RESET);
+			}
+			else if(ucZeroCrossA == ZERO_CROSS_FALLING_EDGE){
+				HAL_GPIO_WritePin(GPO_DBG_1_GPIO_Port, GPO_DBG_1_Pin, GPIO_PIN_SET);
+			}
+			
+			ucZeroCrossA = ZERO_CROSS_NOT_DETECTED;
+			
+		}
 	}
 
 
+	fBemfA_prev = g_fBemfVolt_filtered[0];
 
-#if 0
-	for(int i = 0; i < ADC_BUFFER_LENGTH; i++) {
-
-		switch(i){
-			case 0:
-				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 0, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
-				g_fAdcVolt[eADC_CH_CURR_A] = ((float)avgVal) * (3.3f / 4095.0f);
-				break;
-			case 2:
-				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 2, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
-				g_fAdcVolt[eADC_CH_CURR_B] = ((float)avgVal) * (3.3f / 4095.0f);
-				break;
-			case 1:
-				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 1, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
-				g_fAdcVolt[eADC_CH_CURR_C] = ((float)avgVal) * (3.3f / 4095.0f);
-				break;
-			case 3:
-				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 3, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
-				g_fAdcVolt[eADC_CH_BEMF_A] = ((float)avgVal) * (3.3f / 4095.0f);
-				break;
-
-			case 5:
-				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 3, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
-				g_fAdcVolt[eADC_CH_VBUS] = ((float)avgVal) * (3.3f / 4095.0f);
-				break;
-
-			case 4:
-				avgVal = Calculate_AverageU32_lower(adc_multimode_buffer, 4, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
-				g_fAdcVolt[eADC_CH_BEMF_B] = ((float)avgVal) * (3.3f / 4095.0f);
-				break;
-		}
-
-        avgVal = Calculate_AverageU32_upper(adc_multimode_buffer, 4, ADC_SAMPLE_PER_CH,  ADC_BUFFER_LENGTH);
-		g_fAdcVolt[eADC_CH_BEMF_C] = ((float)avgVal) * (3.3f / 4095.0f);
-    }
-
-
-
-    for(int i = 0; i < ADC_BUFFER_LENGTH; i++)
-    {
-       
-    }
-
-
-#endif
-	//HAL_GPIO_WritePin(GPO_DBG_3_GPIO_Port, GPO_DBG_3_Pin, GPIO_PIN_RESET);
 
 }
 
@@ -460,3 +509,9 @@ void HallEdgeDetected(void* args){
 	}
 }
 #endif
+
+
+static float LowPassFilter(float fInput, float fPrevOutput, float fAlpha){
+	return (fAlpha * fInput) + ((1.0f - fAlpha) * fPrevOutput);
+}
+
